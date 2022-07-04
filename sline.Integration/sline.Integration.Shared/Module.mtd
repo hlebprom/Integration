@@ -29,13 +29,103 @@
       "IsSolutionModule": true,
       "MaxVersion": "",
       "MinVersion": ""
+    },
+    {
+      "Id": "ec7b606a-21ee-4f16-aba8-ab8c2af76d12",
+      "MaxVersion": "",
+      "MinVersion": "0.0.1.0"
+    },
+    {
+      "Id": "4e25caec-c722-4740-bcfd-c4f803840ac6",
+      "MaxVersion": "",
+      "MinVersion": "4.0.41.0"
     }
   ],
   "IconResourcesKeys": [],
   "Importance": "Medium",
   "InterfaceAssemblyName": "Sungero.Domain.Interfaces",
   "InterfaceNamespace": "sline.Integration",
-  "PublicStructures": [],
+  "PublicFunctions": [
+    {
+      "Name": "CreateLogin",
+      "Parameters": [
+        {
+          "Name": "acquaintanceTaskStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.IAcquaintanceTaskStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IAcquaintanceTaskStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IAcquaintanceTaskStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IAcquaintanceTaskStr",
+      "WebApiRequestType": "Post"
+    }
+  ],
+  "PublicStructures": [
+    {
+      "Name": "AcquaintanceTaskStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "Subject",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Author",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Performer",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Importance",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Deadline",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
+        },
+        {
+          "Name": "Created",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "EmployeeExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "DocumentId",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "MainTask",
+          "TypeFullName": "global::System.Int32"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    }
+  ],
   "ResourceInterfaceAssemblyName": "Sungero.Domain.Interfaces",
   "ResourceInterfaceNamespace": "sline.Integration",
   "ResourcesKeys": [],
