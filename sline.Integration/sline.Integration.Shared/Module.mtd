@@ -1,0 +1,59 @@
+{
+  "$type": "Sungero.Metadata.ModuleMetadata, Sungero.Metadata",
+  "NameGuid": "4d915555-cfd1-4c84-b472-e4f6f6f96d49",
+  "Name": "Integration",
+  "AsyncHandlers": [],
+  "ClientAssemblyName": "sline.Integration.Client",
+  "ClientBaseAssemblyName": "sline.Integration.ClientBase",
+  "ClientBaseNamespace": "sline.Integration.ClientBase",
+  "ClientNamespace": "sline.Integration.Client",
+  "Code": "Integra",
+  "CompanyCode": "sline",
+  "Cover": {
+    "NameGuid": "f82865c4-0bdf-4bad-8dc5-916e141fbf30",
+    "Actions": [],
+    "Background": null,
+    "Footer": {
+      "NameGuid": "5b262b8f-ad9c-4ae1-9530-b3295dc3f651",
+      "BackgroundPosition": "Stretch"
+    },
+    "Groups": [],
+    "Header": {
+      "NameGuid": "0cbaec05-0d88-422e-bfb9-1586ac38b517",
+      "BackgroundPosition": "Stretch"
+    }
+  },
+  "Dependencies": [
+    {
+      "Id": "a4c68882-8f22-40c3-a729-680f9532270a",
+      "IsSolutionModule": true,
+      "MaxVersion": "",
+      "MinVersion": ""
+    }
+  ],
+  "IconResourcesKeys": [],
+  "Importance": "Medium",
+  "InterfaceAssemblyName": "Sungero.Domain.Interfaces",
+  "InterfaceNamespace": "sline.Integration",
+  "PublicStructures": [],
+  "ResourceInterfaceAssemblyName": "Sungero.Domain.Interfaces",
+  "ResourceInterfaceNamespace": "sline.Integration",
+  "ResourcesKeys": [],
+  "ServerAssemblyName": "sline.Integration.Server",
+  "ServerNamespace": "sline.Integration.Server",
+  "SharedAssemblyName": "sline.Integration.Shared",
+  "SharedNamespace": "sline.Integration.Shared",
+  "SpecialFolders": [],
+  "Version": "0.0.1.0",
+  "Widgets": [],
+  "Versions": [
+    {
+      "Type": "ModuleMetadata",
+      "Number": 6
+    },
+    {
+      "Type": "DomainApi",
+      "Number": 3
+    }
+  ]
+}

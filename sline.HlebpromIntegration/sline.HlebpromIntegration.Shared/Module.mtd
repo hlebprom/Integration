@@ -1,0 +1,57 @@
+{
+  "$type": "Sungero.Metadata.SolutionMetadata, Sungero.Metadata",
+  "NameGuid": "a4c68882-8f22-40c3-a729-680f9532270a",
+  "Name": "HlebpromIntegration",
+  "AsyncHandlers": [],
+  "ClientAssemblyName": "sline.HlebpromIntegration.Client",
+  "ClientBaseAssemblyName": "sline.HlebpromIntegration.ClientBase",
+  "ClientBaseNamespace": "sline.HlebpromIntegration.ClientBase",
+  "ClientNamespace": "sline.HlebpromIntegration.Client",
+  "Code": "HpInt",
+  "CompanyCode": "sline",
+  "Cover": {
+    "NameGuid": "57c73d6c-f393-415e-bb28-edb9bc7ce314",
+    "Actions": [],
+    "Background": null,
+    "Footer": {
+      "NameGuid": "747cb64b-b2dd-4ea1-acb2-2eec693d3b5a",
+      "BackgroundPosition": "Stretch"
+    },
+    "Groups": [],
+    "Header": {
+      "NameGuid": "e81ff5ec-8bec-45a5-a443-9bb6b7f4f8d2",
+      "BackgroundPosition": "Stretch"
+    }
+  },
+  "DesktopViews": [],
+  "IconResourcesKeys": [],
+  "Importance": "Medium",
+  "InterfaceAssemblyName": "Sungero.Domain.Interfaces",
+  "InterfaceNamespace": "sline.HlebpromIntegration",
+  "OrderedSpecialFolders": [],
+  "PublicStructures": [],
+  "ResourceInterfaceAssemblyName": "Sungero.Domain.Interfaces",
+  "ResourceInterfaceNamespace": "sline.HlebpromIntegration",
+  "ResourcesKeys": [],
+  "ServerAssemblyName": "sline.HlebpromIntegration.Server",
+  "ServerNamespace": "sline.HlebpromIntegration.Server",
+  "SharedAssemblyName": "sline.HlebpromIntegration.Shared",
+  "SharedNamespace": "sline.HlebpromIntegration.Shared",
+  "SpecialFolders": [],
+  "Version": "0.0.1.0",
+  "Widgets": [],
+  "Versions": [
+    {
+      "Type": "SolutionMetadata",
+      "Number": 6
+    },
+    {
+      "Type": "ModuleMetadata",
+      "Number": 6
+    },
+    {
+      "Type": "DomainApi",
+      "Number": 3
+    }
+  ]
+}
