@@ -154,7 +154,7 @@ namespace sline.Integration.Structures.Module
   }
 
   [Public]
-  partial class OrderStr
+  partial class DocumentOrderStr
   {
     public int Id { get; set; }
     public string DocumentId { get; set; }

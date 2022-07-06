@@ -1108,17 +1108,15 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message);
       }
     }
-    
-    #region не работает, позже выяснить почему
-    /*
+        
     [Public(WebApiRequestType = RequestType.Post)]
-    public bool CreateDocOrder(Structures.Module.IDocStr docStr)
+    public bool? CreateDocumentOrder(Structures.Module.IDocumentOrderStr docStr)
     {
-      var entityDto = Structures.Module.DocStr.Create();
+      var entityDto = Structures.Module.DocumentOrderStr.Create();
       string message = string.Empty;
       try
       {
-        message = ValidateStructure(docStr);
+        message = CheckStructure(docStr);
         if (!string.IsNullOrEmpty(message))
         {
           Logger.Error($" >>> SOFTLINE >>> {message}");
@@ -1217,7 +1215,7 @@ namespace sline.Integration.Server
       }
 
     }
-    public string ValidateStructure(Structures.Module.IDocStr inputData)
+    public string CheckStructure(Structures.Module.IDocumentOrderStr inputData)
     {
       string message = string.Empty;
       try
@@ -1270,12 +1268,11 @@ namespace sline.Integration.Server
       }
 
     }
-     */
-    #endregion
-    
+        
     #endregion
     
     #region Отправка уведомлений в почту
+    
     public void SendException(string exMessage, string exStackTrace)
     {
       return;
@@ -1371,6 +1368,7 @@ namespace sline.Integration.Server
       client.Dispose();
 
     }
+    
     #endregion
     
   }
