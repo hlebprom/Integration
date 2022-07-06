@@ -6,6 +6,103 @@ using Sungero.CoreEntities;
 
 namespace sline.Integration.Structures.Module
 {
+
+  [Public]
+  partial class LoginStr
+  {
+    public int Id { get; set; }
+    public string LoginName { get; set; }
+    public string TypeAuthentication { get; set; }
+    public bool? NeedChangePassword { get; set; }
+    public string Status { get; set; }
+  }
+  
+  [Public]
+  partial class DepartmentStr
+  {
+    public int Id { get; set; }
+    public string ExtId { get; set; }
+    public Guid? Sid { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public bool? IsSystem { get; set; }
+    public string Manager { get; set; }
+    public string HeadOffice { get; set; }
+    public string Phone { get; set; }
+    public string ShortName { get; set; }
+    public string Note { get; set; }
+    public string BusinessUnit { get; set; }
+    public string Code { get; set; }
+    public string Status { get; set; }
+  }
+
+  [Public]
+  partial class ContactStr
+  {
+    public int Id { get; set; }
+    public string ExtId { get; set; }
+    public string Name { get; set; }
+    public string Person { get; set; }
+    public string Company { get; set; }
+    public string Department { get; set; }
+    public string JobTitle { get; set; }
+    public string Phone { get; set; }
+    public string Fax { get; set; }
+    public string Email { get; set; }
+    public string Note { get; set; }
+    public string Homepage { get; set; }
+    public string Status { get; set; }
+  }
+  
+  [Public]
+  partial class CompanyStr
+  {
+    //counterparty
+    public int Id { get; set; }
+    public string ExtId { get; set; }
+    public string Name { get; set; }
+    public string TIN { get; set; }
+    public int? CityId { get; set; }
+    public int? RegionId { get; set; }
+    public string LegalAddress { get; set; }
+    public string PostalAddress { get; set; }
+    public string Phones { get; set; }
+    public string Email { get; set; }
+    public string Homepage { get; set; }
+    public string Note { get; set; }
+    public bool? Nonresident { get; set; }
+    public string PSRN { get; set; }
+    public string NCEO { get; set; }
+    public string NCEA { get; set; }
+    public string Account { get; set; }
+    public int? BankId { get; set; }
+    public bool? CanExchange { get; set; }
+    public string Status { get; set; }
+    //companybase
+    public string TRRC { get; set; }
+    public string LegalName { get; set; }
+    public int? HeadCompanyId { get; set; }
+    public bool? IsCardReadOnly { get; set; }
+    //company
+    public string Responsible { get; set; }
+    public string Code { get; set; }
+    public string City { get; set; }
+    public string Region { get; set; }
+    public string Bank { get; set; }
+    public string HeadCompany { get; set; }
+  }
+  
+  [Public]
+  partial class CityStr
+  {
+    public int Id { get; set; }
+    public string ExtId { get; set; }
+    public string Name { get; set; }
+    public string Region { get; set; }
+    public string Country { get; set; }
+    public string Status { get; set; }
+  }
+  
   [Public]
   partial class AcquaintanceTaskStr
   {

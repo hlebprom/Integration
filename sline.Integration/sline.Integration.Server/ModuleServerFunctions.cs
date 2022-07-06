@@ -12,7 +12,6 @@ namespace sline.Integration.Server
 {
   public class ModuleFunctions
   {
-
     
     #region Получение данных
     
@@ -175,42 +174,6 @@ namespace sline.Integration.Server
       
       return docDto;
     }
-    public string GetContractStatus(int idDoc)
-    {
-      var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
-      int id = 0;
-      var mainTask = ApprovalTasks.Null;
-      foreach (var item in allTask)
-      {
-        if (item.Id > id)
-        {
-          id = item.Id;
-          mainTask = item;
-        }
-      }
-      if (mainTask == null)
-        return "Without task";
-      else
-      {
-        if (mainTask.Status == Sungero.Workflow.Task.Status.Completed)
-          return "Подписан";
-
-        bool checkApprovalStatus = true;
-        var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(x => Equals(x.MainTask.Id, mainTask.Id));
-        foreach (var assign in allAssignments)
-        {
-          bool likeApprAs = ApprovalAssignments.Is(assign);
-          bool likeManApprAs = ApprovalManagerAssignments.Is(assign);
-
-          if ((likeApprAs || likeManApprAs) && assign.Status == Sungero.Workflow.Assignment.Status.InProcess)
-            checkApprovalStatus = false;
-        }
-        if (checkApprovalStatus)
-          return "Согласовано";
-        else
-          return "На согласовании";
-      }
-    }
     
     [Public(WebApiRequestType = RequestType.Get)]
     public List<Structures.Module.ISupAgreementStr> GetSupAgreements(string sysCode)
@@ -340,79 +303,60 @@ namespace sline.Integration.Server
       return docDto;
     }
     
+    public string GetContractStatus(int idDoc)
+    {
+      var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
+      int id = 0;
+      var mainTask = ApprovalTasks.Null;
+      foreach (var item in allTask)
+      {
+        if (item.Id > id)
+        {
+          id = item.Id;
+          mainTask = item;
+        }
+      }
+      if (mainTask == null)
+        return "Without task";
+      else
+      {
+        if (mainTask.Status == Sungero.Workflow.Task.Status.Completed)
+          return "Подписан";
+
+        bool checkApprovalStatus = true;
+        var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(x => Equals(x.MainTask.Id, mainTask.Id));
+        foreach (var assign in allAssignments)
+        {
+          bool likeApprAs = ApprovalAssignments.Is(assign);
+          bool likeManApprAs = ApprovalManagerAssignments.Is(assign);
+
+          if ((likeApprAs || likeManApprAs) && assign.Status == Sungero.Workflow.Assignment.Status.InProcess)
+            checkApprovalStatus = false;
+        }
+        if (checkApprovalStatus)
+          return "Согласовано";
+        else
+          return "На согласовании";
+      }
+    }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public Structures.Module.ICompanyStr GetCompany(string extId)
+    {
+      var entityDto = Structures.Module.CompanyStr.Create();
+
+      var entity = Companies.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault();
+      if (entity != null)
+        entityDto = CopyFromEntity(entity);
+      
+      return entityDto;
+    }
+    
     #endregion
     
     #region Синхронизация данных
     
-    [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
-    {
-      string employeeExtId = "testData";
-      string errorMSG = string.Empty;
-      int doc = 0;
-      try
-      {
-        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
-        doc = acquaintanceTaskStr.DocumentId;
-
-        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
-        if (employee == null)
-        {
-          errorMSG = $"Employee {employeeExtId} not founded";
-          Logger.Error(errorMSG);
-        }
-        
-        // при попытке получения через get появится ошибка, если не существует документа с таким ид
-        var document = Sungero.Docflow.OfficialDocuments.Null;
-        try
-        {
-          document = Sungero.Docflow.OfficialDocuments.Get(doc);
-          if (document == null)
-          {
-            if (errorMSG == "InputDataOK")
-              errorMSG = string.Empty;
-            errorMSG += $"\nDocument {doc} not founded";
-            Logger.Error(errorMSG);
-          }
-        }
-        catch
-        {
-          if (errorMSG == "InputDataOK")
-            errorMSG = string.Empty;
-          errorMSG += $"\nDocument {doc} not founded";
-          Logger.Error(errorMSG);
-        }
-
-        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
-        if (document != null && document.HasVersions && employee != null)
-        {
-          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
-          acqTask.Author = employee;
-          acqTask.DocumentGroup.All.Add(document);
-          acqTask.Performers.AddNew().Performer = employee;
-          acqTask.Deadline = Calendar.Now.AddDays(10);
-          acqTask.Save();
-
-          acqTask.Start();
-          acquaintanceTaskStr.Subject = acqTask.Subject;
-          acquaintanceTaskStr.Deadline = acqTask.Deadline;
-          acquaintanceTaskStr.Author = acqTask.Author.Name;
-          acquaintanceTaskStr.Status = acqTask.Status.ToString();
-          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
-          acquaintanceTaskStr.Created = acqTask.Created;
-          acquaintanceTaskStr.Id = acqTask.Id;
-          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
-        }
-
-        return acquaintanceTaskStr;
-      }
-      catch (Exception exc)
-      {
-        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
-        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
-        throw new Exception(exc.Message + exc.StackTrace);
-      }
-    }
+    #region ОШС
     
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.IEmployeeStr SyncEmployee(Structures.Module.IEmployeeStr employeeStr)
@@ -837,7 +781,333 @@ namespace sline.Integration.Server
       jobTitleStr.Status = entity.Status?.Value;
       
       return jobTitleStr;
-    }    
+    }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IDepartmentStr SyncDepartment(Structures.Module.IDepartmentStr departmentStr)
+    {
+      try
+      {
+        var extId = departmentStr.ExtId;
+        var entity = Departments.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault() ?? Departments.Create();
+
+        entity.ExtIdhprom = extId;
+
+        entity.Name = departmentStr.Name;
+        if (departmentStr.Manager != null)
+          entity.ManagerExtIdhprom = departmentStr.Manager;
+
+        if (departmentStr.HeadOffice != null)
+          entity.HeadOfficeExtIdhprom = departmentStr.HeadOffice;
+
+        if (departmentStr.Phone != null)
+          entity.Phone = departmentStr.Phone;
+
+        if (departmentStr.ShortName != null)
+          entity.ShortName = departmentStr.ShortName;
+
+        if (departmentStr.Note != null)
+          entity.Note = departmentStr.Note;
+
+        if (departmentStr.BusinessUnit != null)
+          entity.BusinessUnitExtIdhprom = departmentStr.BusinessUnit;
+
+        if (departmentStr.Code != null)
+          entity.Code = departmentStr.Code;
+
+        if (departmentStr.Status == "Active")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+        else if (departmentStr.Status == "Closed")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+        entity.Save();
+        
+        departmentStr.Id = entity.Id;
+        departmentStr.ExtId = entity.ExtIdhprom;
+        departmentStr.Sid = entity.Sid;
+        departmentStr.Name = entity.Name;
+        departmentStr.Description = entity.Description;
+        departmentStr.IsSystem = entity.IsSystem;
+        departmentStr.Manager = entity.ManagerExtIdhprom;
+        departmentStr.HeadOffice = entity.HeadOfficeExtIdhprom;
+        departmentStr.Phone = entity.Phone;
+        departmentStr.ShortName = entity.ShortName;
+        departmentStr.Note = entity.Note;
+        departmentStr.BusinessUnit = entity.BusinessUnitExtIdhprom;
+        departmentStr.Code = entity.Code;
+        departmentStr.Status = entity.Status.ToString();
+
+        return departmentStr;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message);
+      }
+    }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.ILoginStr SyncLogin(Structures.Module.ILoginStr loginStr)
+    {
+      try
+      {
+        var loginName = loginStr.LoginName;
+        var entity = Logins.GetAll().Where(l => l.LoginName == loginName).FirstOrDefault() ?? Logins.Create();
+
+        entity.LoginName = loginName;
+        
+        if (loginStr.TypeAuthentication == "Windows")
+          entity.TypeAuthentication = Sungero.CoreEntities.Login.TypeAuthentication.Windows;
+        else if (loginStr.TypeAuthentication == "Password")
+          entity.TypeAuthentication = Sungero.CoreEntities.Login.TypeAuthentication.Password;
+
+        entity.NeedChangePassword = loginStr.NeedChangePassword;
+
+        if (loginStr.Status == "Active")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+        else if (loginStr.Status == "Closed")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+        entity.Save();
+        
+        loginStr.Id = entity.Id;
+        loginStr.LoginName = entity.LoginName;
+        loginStr.TypeAuthentication = entity.TypeAuthentication.ToString();
+        loginStr.NeedChangePassword = entity.NeedChangePassword;
+        loginStr.Status = entity.Status.ToString();
+        
+        return loginStr;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message);
+      }
+    }
+    
+    #endregion
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
+    {
+      string employeeExtId = "testData";
+      string errorMSG = string.Empty;
+      int doc = 0;
+      try
+      {
+        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
+        doc = acquaintanceTaskStr.DocumentId;
+
+        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
+        if (employee == null)
+        {
+          errorMSG = $"Employee {employeeExtId} not founded";
+          Logger.Error(errorMSG);
+        }
+        
+        // при попытке получения через get появится ошибка, если не существует документа с таким ид
+        var document = Sungero.Docflow.OfficialDocuments.Null;
+        try
+        {
+          document = Sungero.Docflow.OfficialDocuments.Get(doc);
+          if (document == null)
+          {
+            if (errorMSG == "InputDataOK")
+              errorMSG = string.Empty;
+            errorMSG += $"\nDocument {doc} not founded";
+            Logger.Error(errorMSG);
+          }
+        }
+        catch
+        {
+          if (errorMSG == "InputDataOK")
+            errorMSG = string.Empty;
+          errorMSG += $"\nDocument {doc} not founded";
+          Logger.Error(errorMSG);
+        }
+
+        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
+        if (document != null && document.HasVersions && employee != null)
+        {
+          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
+          acqTask.Author = employee;
+          acqTask.DocumentGroup.All.Add(document);
+          acqTask.Performers.AddNew().Performer = employee;
+          acqTask.Deadline = Calendar.Now.AddDays(10);
+          acqTask.Save();
+
+          acqTask.Start();
+          acquaintanceTaskStr.Subject = acqTask.Subject;
+          acquaintanceTaskStr.Deadline = acqTask.Deadline;
+          acquaintanceTaskStr.Author = acqTask.Author.Name;
+          acquaintanceTaskStr.Status = acqTask.Status.ToString();
+          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
+          acquaintanceTaskStr.Created = acqTask.Created;
+          acquaintanceTaskStr.Id = acqTask.Id;
+          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
+        }
+
+        return acquaintanceTaskStr;
+      }
+      catch (Exception exc)
+      {
+        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message + exc.StackTrace);
+      }
+    }
+        
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.ICityStr SyncCity(Structures.Module.ICityStr cityStr)
+    {
+      var extId = cityStr.ExtId;
+      var entity = Cities.GetAll().FirstOrDefault(e => e.Region.Code == cityStr.Region && e.Name.Contains(cityStr.Name)) ?? Cities.Create();
+      entity.Name = cityStr.Name;
+      entity.Region = Sungero.Commons.Regions.GetAll().Where(r => r.Code == cityStr.Region).FirstOrDefault();
+      entity.Country = Sungero.Commons.Countries.GetAll().Where(r => r.Code == cityStr.Region).FirstOrDefault();
+
+      if (cityStr.Status == "Active")
+        entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+      else if (cityStr.Status == "Closed")
+        entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+      entity.Save();
+      
+      cityStr.Id = entity.Id;
+      cityStr.ExtId = entity.ExtIdhprom;
+      cityStr.Name = entity.Name;
+      cityStr.Region = entity.Region.Code;
+      cityStr.Country = entity.Country.Code;
+      cityStr.Status = entity.Status.ToString();
+
+      return cityStr;
+    }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.ICompanyStr SyncCompany(Structures.Module.ICompanyStr companyStr)
+    {
+      try
+      {
+        var extId = companyStr.ExtId;
+        var entity = Companies.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault() ?? Companies.Create();
+
+        entity.ExtIdhprom = extId;
+        entity.Name = companyStr.Name;
+        entity.TIN = companyStr.TIN;
+        entity.TRRC = companyStr.TRRC;
+        entity.PSRN = companyStr.PSRN;
+        entity.NCEA = companyStr.NCEA;
+        entity.NCEO = companyStr.NCEO;
+        entity.ResponsibleExtIdhprom = companyStr.Responsible;
+        entity.CityExtIdhprom = companyStr.City;
+        entity.Region = Sungero.Commons.Regions.GetAll().Where(r => r.Code == companyStr.Region).FirstOrDefault();
+        entity.LegalAddress = companyStr.LegalAddress;
+        entity.PostalAddress = companyStr.PostalAddress;
+        entity.Phones = companyStr.Phones;
+        entity.Email = companyStr.Email;
+        entity.Homepage = companyStr.Homepage;
+        entity.LegalName = companyStr.LegalName;
+        entity.HeadCompanyExtIdhprom = companyStr.HeadCompany;
+        entity.Nonresident = companyStr.Nonresident;
+        entity.Account = companyStr.Account;
+        entity.Bank = Sungero.Parties.Banks.GetAll().Where(r => r.BIC == companyStr.Bank).FirstOrDefault();
+        entity.Note = companyStr.Note;
+        entity.Code = companyStr.Code;
+
+        if (companyStr.Status == "Active")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+        else if (companyStr.Status == "Closed")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+        entity.Save();
+        
+        return CopyFromEntity(entity);
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message);
+      }
+    }
+    public Structures.Module.ICompanyStr CopyFromEntity(ICompany entity)
+    {
+      var companyStr = Structures.Module.CompanyStr.Create();
+      
+      companyStr.Id = entity.Id;
+      companyStr.ExtId = entity.ExtIdhprom;
+      companyStr.Name = entity.Name;
+      companyStr.TIN = entity.TIN;
+      companyStr.TRRC = entity.TRRC;
+      companyStr.PSRN = entity.PSRN;
+      companyStr.NCEO = entity.NCEO;
+      companyStr.NCEA = entity.NCEA;
+      companyStr.Responsible = entity.ResponsibleExtIdhprom;
+      companyStr.City = entity.City?.Name;
+      companyStr.Region = entity.Region?.Code;
+      companyStr.LegalAddress = entity.LegalAddress;
+      companyStr.PostalAddress = entity.PostalAddress;
+      companyStr.Phones = entity.Phones;
+      companyStr.Email = entity.Email;
+      companyStr.Homepage = entity.Homepage;
+      companyStr.LegalName = entity.LegalName;
+      companyStr.HeadCompany = entity.HeadCompanyExtIdhprom;
+      companyStr.Nonresident = entity.Nonresident;
+      companyStr.Account = entity.Account;
+      companyStr.Bank = entity.Bank?.BIC;
+      companyStr.Note = entity.Note;
+      companyStr.Status = entity.Status?.Value;
+      companyStr.Code = entity.Code;
+      
+      return companyStr;
+    }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IContactStr SyncContact(Structures.Module.IContactStr contactStr)
+    {
+      try
+      {
+        var extId = contactStr.ExtId;
+        var entity = Contacts.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault() ?? Contacts.Create();
+
+        entity.ExtIdhprom = extId;
+        entity.Name = contactStr.Name;
+        entity.CompanyExtIdhprom = contactStr.Company;
+        entity.Department = contactStr.Department;
+        entity.JobTitle = contactStr.JobTitle;
+        entity.Phone = contactStr.Phone;
+        entity.Fax = contactStr.Fax;
+        entity.Email = contactStr.Email;
+        entity.Homepage = contactStr.Homepage;
+        entity.Note = contactStr.Note;
+
+        if (contactStr.Status == "Active")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+        else if (contactStr.Status == "Closed")
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+        entity.Save();
+        
+        contactStr.Id = entity.Id;
+        contactStr.Name = entity.Name;
+        contactStr.Person = entity.PersonExtIdhprom;
+        contactStr.Company = entity.CompanyExtIdhprom;
+        contactStr.Department = entity.Department;
+        contactStr.JobTitle = entity.JobTitle;
+        contactStr.Phone = entity.Phone;
+        contactStr.Fax = entity.Fax;
+        contactStr.Email = entity.Email;
+        contactStr.Note = entity.Note;
+        contactStr.Homepage = entity.Homepage;
+        contactStr.Status = entity.Status?.Value;
+        
+        return contactStr;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message);
+      }
+    }
     
     #region не работает, позже выяснить почему
     /*
@@ -1008,6 +1278,7 @@ namespace sline.Integration.Server
     #region Отправка уведомлений в почту
     public void SendException(string exMessage, string exStackTrace)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1031,6 +1302,7 @@ namespace sline.Integration.Server
     }
     public void SendNotify(string mailTo, string msg)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1050,6 +1322,7 @@ namespace sline.Integration.Server
     }
     public void SendMessage(params string[] msgs)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1077,6 +1350,7 @@ namespace sline.Integration.Server
     }
     public void SendTrace(string msg)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1098,5 +1372,6 @@ namespace sline.Integration.Server
 
     }
     #endregion
+    
   }
 }

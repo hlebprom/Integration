@@ -60,6 +60,19 @@
       "WebApiRequestType": "Post"
     },
     {
+      "Name": "GetCompany",
+      "Parameters": [
+        {
+          "Name": "extId",
+          "ParameterType": "global::System.String",
+          "ParameterTypeFullName": "System.String"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.ICompanyStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.ICompanyStr",
+      "WebApiRequestType": "Get"
+    },
+    {
       "Name": "GetContracts",
       "Parameters": [
         {
@@ -86,6 +99,58 @@
       "WebApiRequestType": "Get"
     },
     {
+      "Name": "SyncCity",
+      "Parameters": [
+        {
+          "Name": "cityStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.ICityStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.ICityStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.ICityStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.ICityStr",
+      "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "SyncCompany",
+      "Parameters": [
+        {
+          "Name": "companyStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.ICompanyStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.ICompanyStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.ICompanyStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.ICompanyStr",
+      "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "SyncContact",
+      "Parameters": [
+        {
+          "Name": "contactStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.IContactStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IContactStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IContactStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IContactStr",
+      "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "SyncDepartment",
+      "Parameters": [
+        {
+          "Name": "departmentStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.IDepartmentStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IDepartmentStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IDepartmentStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IDepartmentStr",
+      "WebApiRequestType": "Post"
+    },
+    {
       "Name": "SyncEmployee",
       "Parameters": [
         {
@@ -109,6 +174,19 @@
       ],
       "ReturnType": "global::sline.Integration.Structures.Module.IJobTitleStr",
       "ReturnTypeFullName": "sline.Integration.Structures.Module.IJobTitleStr",
+      "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "SyncLogin",
+      "Parameters": [
+        {
+          "Name": "loginStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.ILoginStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.ILoginStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.ILoginStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.ILoginStr",
       "WebApiRequestType": "Post"
     }
   ],
@@ -173,6 +251,269 @@
         {
           "Name": "MainTask",
           "TypeFullName": "global::System.Int32"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "CityStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Region",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Country",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "CompanyStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "TIN",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "CityId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Int32>"
+        },
+        {
+          "Name": "RegionId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Int32>"
+        },
+        {
+          "Name": "LegalAddress",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "PostalAddress",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Phones",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Email",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Homepage",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Note",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Nonresident",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "PSRN",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "NCEO",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "NCEA",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Account",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "BankId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Int32>"
+        },
+        {
+          "Name": "CanExchange",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "TRRC",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "LegalName",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "HeadCompanyId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Int32>"
+        },
+        {
+          "Name": "IsCardReadOnly",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "Responsible",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Code",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "City",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Region",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Bank",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "HeadCompany",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "ContactStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Person",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Company",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Department",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "JobTitle",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Phone",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Fax",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Email",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Note",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Homepage",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
         }
       ],
       "StructureNamespace": "sline.Integration.Structures.Module"
@@ -314,6 +655,82 @@
           "Name": "ActionWebApi",
           "IsNullable": true,
           "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "DepartmentStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Sid",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Guid>"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Description",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "IsSystem",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "Manager",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "HeadOffice",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Phone",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "ShortName",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Note",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "BusinessUnit",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Code",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
         },
         {
           "Name": "Status",
@@ -476,6 +893,37 @@
           "Name": "Name",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Status",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "LoginStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "LoginName",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "TypeAuthentication",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "NeedChangePassword",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
         },
         {
           "Name": "Status",
