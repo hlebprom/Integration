@@ -436,6 +436,400 @@ namespace sline.Integration.Server
 
     }
 
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IEmployeeStr SyncEmployee(Structures.Module.IEmployeeStr employeeStr)
+    {
+      try
+      {
+        var entityDto = Structures.Module.EmployeeStr.Create();
+        
+        var extId = employeeStr.ExtId;
+        var entity = Employees.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault();
+        if (entity == null)
+        {
+          entity = InsertEmployee(employeeStr);
+        }
+        else
+        {
+          entity = UpdateEmployee(entity, employeeStr);
+        }
+        
+        employeeStr.Id = entity.Id;
+        employeeStr.ExtId = entity.ExtIdhprom;
+        employeeStr.LastName = entity.Person.LastName;
+        employeeStr.FirstName = entity.Person.FirstName;
+        employeeStr.MiddleName = entity.Person.MiddleName;
+        employeeStr.Login = entity.Login?.LoginName;
+        employeeStr.Department = entity.DepartmentExtIdhprom;
+        employeeStr.Description = entity.Description;
+        employeeStr.Email = entity.Email;
+        employeeStr.Name = entity.Name;
+        employeeStr.IsSystem = entity.IsSystem;
+        employeeStr.Person = entity.PersonExtIdhprom;
+        employeeStr.JobTitle = entity.JobTitle?.Name;
+        employeeStr.Phone = entity.Phone;
+        employeeStr.Note = entity.Note;
+        employeeStr.NeedNotifyNewAssignments = entity.NeedNotifyNewAssignments;
+        employeeStr.NeedNotifyExpiredAssignments = entity.NeedNotifyExpiredAssignments;
+        employeeStr.Status = entity.Status?.Value;
+
+        employeeStr.TIN = entity.Person.TIN;
+        employeeStr.INILA = entity.Person.INILA;
+        employeeStr.DateOfBirth = entity.Person.DateOfBirth?.ToString();
+        employeeStr.Sex = entity.Person.Sex?.Value;
+        employeeStr.EmployeeNumber = entity.EmployeeNumberhprom;
+        
+        return employeeStr;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error(" >>> SOFTLINE >>> {exc.Message}, {exc.StackTrace}");
+        throw new Exception(exc.Message);
+      }
+    }
+    public IEmployee InsertEmployee(Structures.Module.IEmployeeStr inputData)
+    {
+      try
+      {
+        var entity = Employees.Create();
+        var extId = inputData.ExtId;
+        entity.ExtIdhprom = extId;
+        entity.PersonExtIdhprom = inputData.Person;
+        if (inputData.LastName != null)
+          entity.Person.LastName = inputData.LastName;
+        if (inputData.FirstName != null)
+          entity.Person.FirstName = inputData.FirstName;
+        if (inputData.MiddleName != null)
+          entity.Person.MiddleName = inputData.MiddleName;
+        if (inputData.TIN != null)
+          entity.Person.TIN = inputData.TIN;
+        if (inputData.INILA != null)
+          entity.Person.INILA = inputData.INILA;
+        var dateOfBirth = inputData.DateOfBirth;
+        if (!string.IsNullOrEmpty(dateOfBirth))
+          entity.Person.DateOfBirth = Convert.ToDateTime(dateOfBirth);
+        else
+          entity.Person.DateOfBirth = null;
+        if (inputData.Sex != null)
+        {
+          if (inputData.Sex == "Male")
+            entity.Person.Sex = Sungero.Parties.Person.Sex.Male;
+          else if (inputData.Sex == "Female")
+            entity.Person.Sex = Sungero.Parties.Person.Sex.Female;
+        }
+        if (inputData.Status == "Active")
+        {
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+          entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+        }
+        else if (inputData.Status == "Closed")
+        {
+          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+          entity.Login = null;
+          entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+        }
+        entity.Person.Save();
+        if (inputData.Login != null)
+          entity.Login = Sungero.CoreEntities.Logins.GetAll().Where(l => l.LoginName == inputData.Login).FirstOrDefault();
+        if (inputData.JobTitle != null)
+          entity.JobTitle = Sungero.Company.JobTitles.GetAll().Where(l => l.Name == inputData.JobTitle).FirstOrDefault(); ;
+        if (inputData.Department != null)
+          entity.DepartmentExtIdhprom = inputData.Department;
+        if (inputData.Phone != null)
+          entity.Phone = inputData.Phone;
+        if (inputData.Note != null)
+          entity.Note = inputData.Note;
+        if (inputData.Email != null)
+          entity.Email = inputData.Email;
+        if (inputData.NeedNotifyExpiredAssignments != null)
+          entity.NeedNotifyExpiredAssignments = inputData.NeedNotifyExpiredAssignments;
+        if (inputData.NeedNotifyNewAssignments != null)
+          entity.NeedNotifyNewAssignments = inputData.NeedNotifyNewAssignments;
+        entity.AdmManagerExtIdhprom = inputData.AdministrativeManager;
+        entity.FuncManagerExtIdhprom = inputData.FunctionalManager;
+        entity.Name = entity.Person.Name;
+        entity.EmployeeNumberhprom = inputData.EmployeeNumber;
+        entity.Save();
+
+        return entity;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> Ошибка при создании сотрудника с ExtId='{inputData.ExtId}': {exc.Message}, {exc.StackTrace}");
+        SendMessage("Логи ошибки отправке сотрудника", inputData.ExtId, exc.Message, exc.StackTrace);
+        throw new Exception(exc.Message);
+      }
+    }
+    public IEmployee UpdateEmployee(IEmployee entity, Structures.Module.IEmployeeStr inputData)
+    {
+      try
+      {
+        // проверка изменения сущности доступна через entity.State.IsChanged
+        // срабатывает true, если затрагивалось изменение.
+        // можно проверять значение в сущности с тем, что мы передаем, и перед сохранением единожды проверить, была ли сущность изменена
+        bool isUpdateted = false;
+        
+        //var entityDto = new EmployeeDto();
+        if (entity.PersonExtIdhprom != inputData.Person)
+        {
+          entity.PersonExtIdhprom = inputData.Person;
+          isUpdateted = true;
+        }
+        if (inputData.LastName != null)
+        {
+          if (entity.Person.LastName != inputData.LastName)
+          {
+            entity.Person.LastName = inputData.LastName;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.FirstName != null)
+        {
+          if (entity.Person.FirstName != inputData.FirstName)
+          {
+            entity.Person.FirstName = inputData.FirstName;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.MiddleName != null)
+        {
+          if (entity.Person.MiddleName != inputData.MiddleName)
+          {
+            entity.Person.MiddleName = inputData.MiddleName;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.TIN != null)
+        {
+          if (entity.Person.TIN != inputData.TIN)
+          {
+            entity.Person.TIN = inputData.TIN;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.INILA != null)
+        {
+          if (entity.Person.INILA != inputData.INILA)
+          {
+            entity.Person.INILA = inputData.INILA;
+            isUpdateted = true;
+          }
+        }
+        var dateOfBirth = inputData.DateOfBirth;
+        if (!string.IsNullOrEmpty(dateOfBirth))
+        {
+          if (entity.Person.DateOfBirth != Convert.ToDateTime(dateOfBirth))
+          {
+            entity.Person.DateOfBirth = Convert.ToDateTime(dateOfBirth);
+            isUpdateted = true;
+          }
+        }
+        else
+        {
+          if (entity.Person.DateOfBirth != null)
+          {
+            entity.Person.DateOfBirth = null;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.Sex != null)
+        {
+          if (inputData.Sex == "Male")
+          {
+            if (entity.Person.Sex != Sungero.Parties.Person.Sex.Male)
+            {
+              entity.Person.Sex = Sungero.Parties.Person.Sex.Male;
+              isUpdateted = true;
+            }
+          }
+          else if (inputData.Sex == "Female")
+          {
+            if (entity.Person.Sex != Sungero.Parties.Person.Sex.Female)
+            {
+              entity.Person.Sex = Sungero.Parties.Person.Sex.Female;
+              isUpdateted = true;
+            }
+          }
+
+        }
+        if (inputData.Status == "Active")
+        {
+          if (entity.Status != Sungero.CoreEntities.DatabookEntry.Status.Active)
+          {
+            entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+            entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+            isUpdateted = true;
+          }
+        }
+        else if (inputData.Status == "Closed")
+        {
+          if (entity.Status != Sungero.CoreEntities.DatabookEntry.Status.Closed)
+          {
+            //Проверка и отправка не выполненых заданий у уволившегося сотрудника
+            var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(e => Equals(e.Performer.Id, entity.Id) &&
+                                                                             e.Status == Sungero.Workflow.Task.Status.InProcess);
+            if (allAssignments.Count() != 0)
+            {
+              var admManager = Employees.GetAll().Where(e => Equals(e, entity.AdministrativeManagerhprom));
+              var funcManager = Employees.GetAll().Where(e =>  Equals(e, entity.FunctionalManagerhprom));
+              
+              string SMTPServer = "smtp.office365.com";
+              int SMTPPort = 587;
+              string password = "z@Q2Mt4n^oZGUu$Z";
+              string mailFrom = "directum-robot@hlebprom.com";
+              string defaultMail = "shirokov@hlebprom.com";// TODO ShirokovHP Пересмотреть в релизе
+              string mailTo = "";
+
+              if (admManager.FirstOrDefault() != null)
+                mailTo = admManager.FirstOrDefault().Email;
+
+              if (mailTo == "")
+                mailTo = defaultMail;
+
+              MailAddress from = new MailAddress(mailFrom);
+              MailAddress to = new MailAddress(mailTo);
+
+              SmtpClient client = new SmtpClient(SMTPServer, SMTPPort);
+              client.Credentials = new NetworkCredential(mailFrom, password);
+              var empl = allAssignments.FirstOrDefault().Performer;
+              ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+              client.EnableSsl = true;
+
+              MailMessage message = new MailMessage(from, to);
+              string body = "У сотрудника " + empl.Name + " есть незавершенные задания.\n";
+              body += "Обратитесь в тех поддержку для настройки Замещения, уволившегося сотрудника.\n";
+              body += "Список незавершенных заданий:\n";
+              string subject = "Список не законченных заданий уволившегося сотрудника: " + empl.Name;
+              foreach (var item in allAssignments)
+              {
+                body += "ИД: " + item.Id + "  " + item.Subject + "\n";
+              }
+              message.Body = body;//Добавить html форматирован
+              message.BodyEncoding = System.Text.Encoding.UTF8;
+              message.Subject = subject;
+              message.SubjectEncoding = System.Text.Encoding.UTF8;
+
+              if (funcManager.FirstOrDefault() != null)
+                if (funcManager.FirstOrDefault().Email != "" && funcManager.FirstOrDefault() != admManager.FirstOrDefault())
+                  message.To.Add(funcManager.FirstOrDefault().Email);
+
+              client.Send(message);
+            }
+            entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+            entity.Login = null;
+            entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+            isUpdateted = true;
+          }
+        }
+        if (isUpdateted)
+        {
+          entity.Person.Save();
+        }
+        if (inputData.Login != null)
+        {
+          var login = Sungero.CoreEntities.Logins.GetAll().Where(l => l.LoginName == inputData.Login).FirstOrDefault();
+          if (entity.Login != login)
+          {
+            entity.Login = login;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.JobTitle != null)
+        {
+          var jobTitle = Sungero.Company.JobTitles.GetAll().Where(l => l.Name == inputData.JobTitle).FirstOrDefault();
+          if (entity.JobTitle != jobTitle)
+          {
+            entity.JobTitle = jobTitle;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.Department != null)
+        {
+          if (entity.DepartmentExtIdhprom != inputData.Department)
+          {
+            entity.DepartmentExtIdhprom = inputData.Department;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.Phone != null)
+        {
+          if (entity.Phone != inputData.Phone)
+          {
+            entity.Phone = inputData.Phone;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.Note != null)
+        {
+          if (entity.Note != inputData.Note)
+          {
+            entity.Note = inputData.Note;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.Email != null)
+        {
+          if (entity.Email != inputData.Email)
+          {
+            entity.Email = inputData.Email;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.NeedNotifyExpiredAssignments != null)
+        {
+          if (entity.NeedNotifyExpiredAssignments != inputData.NeedNotifyExpiredAssignments)
+          {
+            entity.NeedNotifyExpiredAssignments = inputData.NeedNotifyExpiredAssignments;
+            isUpdateted = true;
+          }
+        }
+        if (inputData.NeedNotifyNewAssignments != null)
+        {
+          if (entity.NeedNotifyNewAssignments != inputData.NeedNotifyNewAssignments)
+          {
+            entity.NeedNotifyNewAssignments = inputData.NeedNotifyNewAssignments;
+            isUpdateted = true;
+          }
+        }
+        if (entity.AdmManagerExtIdhprom != inputData.AdministrativeManager)
+        {
+          entity.AdmManagerExtIdhprom = inputData.AdministrativeManager;
+          isUpdateted = true;
+        }
+        if (entity.FuncManagerExtIdhprom != inputData.FunctionalManager)
+        {
+          entity.FuncManagerExtIdhprom = inputData.FunctionalManager;
+          isUpdateted = true;
+        }
+        if (entity.Name != entity.Person.Name)
+        {
+          entity.Name = entity.Person.Name;
+          isUpdateted = true;
+        }
+        if (inputData.EmployeeNumber != null)
+        {
+          if (entity.EmployeeNumberhprom != inputData.EmployeeNumber)
+          {
+            entity.EmployeeNumberhprom = inputData.EmployeeNumber;
+            isUpdateted = true;
+          }
+        }
+        if (isUpdateted)
+        {
+          //entity.LastUpdate = DateTime.Today();
+          entity.Save();
+        }
+
+        return entity;
+      }
+      catch (Exception exc)
+      {
+        Logger.Error($" >>> SOFTLINE >>> Ошибка при обновлении сотрудника с ExtId='{inputData.ExtId}': {exc.Message}, {exc.StackTrace}");
+        SendMessage("Логи ошибки отправке сотрудника", inputData.ExtId, exc.Message, exc.StackTrace);
+        throw new Exception(exc.Message);
+      }
+    }
+    
     #region Отправка уведомлений в почту
     public void SendException(Exception ex)
     {
@@ -527,7 +921,7 @@ namespace sline.Integration.Server
       client.Send(message);
       client.Dispose();
 
-    }  
+    }
     #endregion
   }
 }
