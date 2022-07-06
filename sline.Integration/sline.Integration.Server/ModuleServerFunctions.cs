@@ -12,75 +12,7 @@ namespace sline.Integration.Server
 {
   public class ModuleFunctions
   {
-    [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
-    {
-      string employeeExtId = "testData";
-      string errorMSG = string.Empty;
-      int doc = 0;
-      try
-      {
-        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
-        doc = acquaintanceTaskStr.DocumentId;
-
-        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
-        if (employee == null)
-        {
-          errorMSG = $"Employee {employeeExtId} not founded";
-          Logger.Error(errorMSG);
-        }
-        
-        // при попытке получения через get появится ошибка, если не существует документа с таким ид
-        var document = Sungero.Docflow.OfficialDocuments.Null;
-        try
-        {
-          document = Sungero.Docflow.OfficialDocuments.Get(doc);
-          if (document == null)
-          {
-            if (errorMSG == "InputDataOK")
-              errorMSG = string.Empty;
-            errorMSG += $"\nDocument {doc} not founded";
-            Logger.Error(errorMSG);
-          }
-        }
-        catch
-        {
-          if (errorMSG == "InputDataOK")
-            errorMSG = string.Empty;
-          errorMSG += $"\nDocument {doc} not founded";
-          Logger.Error(errorMSG);
-        }
-
-        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
-        if (document != null && document.HasVersions && employee != null)
-        {
-          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
-          acqTask.Author = employee;
-          acqTask.DocumentGroup.All.Add(document);
-          acqTask.Performers.AddNew().Performer = employee;
-          acqTask.Deadline = Calendar.Now.AddDays(10);
-          acqTask.Save();
-
-          acqTask.Start();
-          acquaintanceTaskStr.Subject = acqTask.Subject;
-          acquaintanceTaskStr.Deadline = acqTask.Deadline;
-          acquaintanceTaskStr.Author = acqTask.Author.Name;
-          acquaintanceTaskStr.Status = acqTask.Status.ToString();
-          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
-          acquaintanceTaskStr.Created = acqTask.Created;
-          acquaintanceTaskStr.Id = acqTask.Id;
-          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
-        }
-
-        return acquaintanceTaskStr;
-      }
-      catch (Exception exc)
-      {
-        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
-        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
-        throw new Exception(exc.Message + exc.StackTrace);
-      }
-    }
+    #region Получение данных
     
     [Public(WebApiRequestType = RequestType.Get)]
     public List<Structures.Module.IContractStr> GetContracts(string sysCode)
@@ -114,6 +46,7 @@ namespace sline.Integration.Server
               var docDto = Structures.Module.ContractStr.Create();
               docDto.Id = doc.Id;
               docDto.Note = exc.Message;
+              
               result.Add(docDto);
             }
             catch
@@ -142,6 +75,7 @@ namespace sline.Integration.Server
                 var docDto = Structures.Module.ContractStr.Create();
                 docDto.Id = doc.Id;
                 docDto.Note = exc.Message;
+                
                 result.Add(docDto);
               }
               catch
@@ -153,7 +87,7 @@ namespace sline.Integration.Server
 
       return result;
     }
-    public Structures.Module.IContractStr CopyFromEntity(hprom.DocflowExt.IContract entity)
+    public Structures.Module.IContractStr CopyFromEntity(IContract entity)
     {
       var docDto = Structures.Module.ContractStr.Create();
       docDto.Id = entity.Id;
@@ -239,7 +173,7 @@ namespace sline.Integration.Server
       
       return docDto;
     }
-    public static string GetContractStatus(int idDoc)
+    public string GetContractStatus(int idDoc)
     {
       var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
       int id = 0;
@@ -276,173 +210,214 @@ namespace sline.Integration.Server
       }
     }
     
-    [Public(WebApiRequestType = RequestType.Post)]
-    public bool CreateOrder(Structures.Module.IDocumentStr documentStr)
+    [Public(WebApiRequestType = RequestType.Get)]
+    public List<Structures.Module.ISupAgreementStr> GetSupAgreements(string sysCode)
     {
-      var entityDto = Structures.Module.DocumentStr.Create();
-      string message = null;
-      try
-      {
-        message = Validate(documentStr);
-        if (message != null)
-        {
-          Logger.Error($" >>> SOFTLINE >>> {message}");
-          throw new Exception(message);
-        }
-        var order = Orders.Create();
-        order.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == documentStr.DocumentKind).FirstOrDefault();
-        var author = Employees.GetAll().Where(x => x.ExtIdhprom == documentStr.AuthorExtId).FirstOrDefault();
-        order.Author = author;
-        order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == documentStr.BusinessUnit).FirstOrDefault();
-        order.Department = Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
-        order.DocumentDate = Calendar.Now;
-        order.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == documentStr.EmployeeExtId).FirstOrDefault();
-        Calendar.TryParseDate(documentStr.DocumentDate, out DateTime date);
-        order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + documentStr.DocumentNumber + "\" от " +
-          date.ToString("dd.MM.yyyy") + " на сотрудника - " + order.Assignee.DisplayValue;
-        order.DisplayValue = order.Subject;
-        order.Responsiblehprom = author.Name;
-        order.Responsibleshprom.AddNew().ResponsibleProperty = author;
-        order.OneTimeDochprom = true;
-        order.DepartmentsAffectedPromhprom.AddNew().Department = order.Department;
-        order.ESignhprom = true;
-        order.PreparedBy = author;
-        
-        using (MemoryStream stream = new MemoryStream())
-        {
-          var app = Sungero.Content.AssociatedApplications.GetAll().Where(x => x.Extension == documentStr.DocExt).FirstOrDefault();
-          byte[] data = Convert.FromBase64String(documentStr.LastVersionBody);
-          stream.Write(data, 0, data.Length);
-          order.CreateVersion();
-          order.LastVersion.AssociatedApplication = app;
-          order.LastVersion.Body.Write(stream);
-        }
-        order.Save();
+      List<Structures.Module.ISupAgreementStr> result = new List<Structures.Module.ISupAgreementStr>();
+      var documents = SupAgreements.GetAll();
 
-        var leadingDoc = Sungero.Docflow.OfficialDocuments.GetAll().Where(x => Equals(x.Id.ToString(), documentStr.LeadingDocumentId)).FirstOrDefault();
-        if (leadingDoc == null)
+      if (sysCode == "1C")
+        documents = documents.Where(d => d.DocumentKind.ExportTo1Chprom == true && d.APIUpdatedhprom != false);
+      if (sysCode == "AX")
+        documents = documents.Where(d => d.DocumentKind.ExportToAXhprom == true && d.APIUpdatedhprom != false);
+
+      foreach (var doc in documents)
+      {
+        if (doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.Signed
+            || doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.PendingSign)
         {
-          message = string.Format("Ведущий документ ИД {0} для приказа {1} ИД {2} не найден", documentStr.LeadingDocumentId, documentStr.DocumentKind, order.Id);
-          Logger.Debug($" >>> SOFTLINE >>> {message}");
-          SendNotify(author.Person.Email, message);
-        }
-        else
-        {
-          leadingDoc.Relations.Add("Basis", order);
-          leadingDoc.Save();
-        }
-        var task = Sungero.Docflow.PublicFunctions.Module.Remote.CreateApprovalTask(order);
-        if (documentStr.Trace)
-        {
-          SendTrace($"Task: {task.Id}");
-          Logger.Debug($" >>> SOFTLINE >>> Task: {task.Id}");
-        }
-        if (task == null)
-        {
-          message = "(ApprovalTask == null)";
-          Logger.Error($" >>> SOFTLINE >>> {message}");
-          throw new Exception(message);
-        }
-        if (task.ApprovalRule == null)
-        {
-          var rule = Sungero.Docflow.ApprovalRuleBases.GetAll().Where(x => x.Name == documentStr.ApprovalRule).FirstOrDefault();
-          if (rule == null)
+          try
           {
-            message = string.Format("Not found ApprovalRule: {0}", documentStr.ApprovalRule);
-            Logger.ErrorFormat("Not found ApprovalRule: {0}", documentStr.ApprovalRule);
-            throw new Exception(message);
+            var docDto = Structures.Module.SupAgreementStr.Create();
+            docDto = CopyFromEntity(doc);
+            docDto.APIUpdatedhprom = false;
+            docDto.ActionWebApi = true;
+            docDto = SaveEntity(docDto);
+            
+            result.Add(docDto);
           }
-          task.ApprovalRule = rule;
-          if (documentStr.Trace)
+          catch(Exception exc)
           {
-            Logger.Debug($" >>> SOFTLINE >>> ApprovalRule: {task.ApprovalRule.Name}");
-            SendTrace($"ApprovalRule: {task.ApprovalRule.Name}");
+            try
+            {
+              var docDto = Structures.Module.SupAgreementStr.Create();
+              docDto.Id = doc.Id;
+              docDto.Note = exc.Message;
+              
+              result.Add(docDto);
+            }
+            catch { }
           }
         }
-        task.Signatory = Employees.GetAll().Where(x => x.ExtIdhprom == documentStr.Signatory).FirstOrDefault();
-        task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == documentStr.EmployeeExtId).FirstOrDefault();
-        //task.Save();
+      }
+
+      return result;
+    }
+    public Structures.Module.ISupAgreementStr CopyFromEntity(ISupAgreement entity)
+    {
+      var docDto = Structures.Module.SupAgreementStr.Create();
+      docDto.Id = entity.Id;
+      docDto.Name = entity.Name;
+      docDto.DocumentKind = entity.DocumentKind?.Name;
+
+      docDto.LeadingDocument = entity.LeadingDocument?.Id;
+      var bu = BusinessUnits.As(entity.BusinessUnit);
+      docDto.BusinessUnit = bu?.ExtIdhprom;
+      docDto.Subject = entity.Subject;
+      docDto.Note = entity.Note;
+      var ourSign = Employees.As(entity.OurSignatory);
+      docDto.OurSignatory = ourSign?.ExtIdhprom;
+      docDto.DocumentGroup = entity.DocumentGroup?.Name;
+      // TODO RomanovSL Обсудить корректность реализации в WebApi
+      /*var dep = entity.OurSignatory as hprom.DocflowExt.IDepartment;
+      docDto.Department = dep?.ExtIdhprom;*/
+      docDto.IsIsAutomaticRenewal = entity.LeadingDocument?.IsAutomaticRenewal;
+      docDto.RegistrationNumber = entity.RegistrationNumber;
+      docDto.RegistrationDate = entity.RegistrationDate;
+      var counterparty = entity.Counterparty;
+      if (Companies.Is(counterparty))
+      {
+        docDto.Counterparty = Companies.As(counterparty)?.ExtIdhprom;
+      }
+      docDto.CounterpartySignatory = entity.CounterpartySignatory?.Id;
+      if (entity.TotalAmount == null)
+        docDto.TotalAmount = 0;
+      else
+        docDto.TotalAmount = entity.TotalAmount;
+      docDto.Currency = entity.Currency?.Id;
+      docDto.Contact = entity.Contact?.Id;
+      docDto.ValidFrom = entity.ValidFrom;
+      docDto.ValidTill = entity.ValidTill;
+
+      docDto.Created = entity.Created;
+
+      var ldoc = Contracts.As(entity.LeadingDocument);
+      var resp = Employees.As(ldoc?.Responsiblehprom);
+      docDto.ResponsibleEmployee = resp?.ExtIdhprom;
+      docDto.IsStandard = entity.IsStandard;
+      docDto.APIUpdatedhprom = entity.APIUpdatedhprom;
+      docDto.ActionWebApi = entity.ActionWebApihprom;
+      docDto.Status = GetContractStatus(docDto.Id);
+      
+      return docDto;
+    }
+    public Structures.Module.ISupAgreementStr SaveEntity(Structures.Module.ISupAgreementStr docDto)
+    {
+      var entity = SupAgreements.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id)) ?? SupAgreements.Create();
+      entity.ActionWebApihprom = docDto.ActionWebApi;
+      entity.Save();
+      docDto = CopyFromEntity(entity);
+      
+      var docVersion = entity.LastVersion;
+      if (docVersion != null)
+      {
         try
         {
-          Sungero.Workflow.Functions.TaskRemoteFunctions.Start(task);
-        }
-        catch (Exception ex)
-        {
-          Logger.Error($" >>> SOFTLINE >>> TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
-          SendTrace($"TaskRemoteFunctions.Start() {ex.Message}\n{ex.StackTrace}");
-        }
-        
-        return true;
-      }
-      catch (Exception ex)
-      {
-        SendException(ex);
-        Logger.Error($" >>> SOFTLINE >>> TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
-        return false;
-      }
-
-    }
-    public string Validate(Structures.Module.IDocumentStr inputData)
-    {
-      string message = string.Empty;
-      try
-      {
-        var signatory = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.Signatory).FirstOrDefault();
-        if (signatory == null)
-        {
-          message += string.Format("Не найден подписант Signatory: {0} \r\n", inputData.Signatory);
-        }
-        else
-        {
-          var recipient = Sungero.Docflow.SignatureSettings.GetAll().Where(x => Equals(x.Recipient.Id, signatory.Id)).FirstOrDefault();
-          if (recipient == null)
+          docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
+          using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
           {
-            message += string.Format("Нет права подписи у Signatory: {0} \r\n", signatory.Name);
+            if (docVersion.PublicBody.Size > 0)
+            {
+              var str = docVersion.PublicBody.Read();
+              str.CopyTo(ms);
+            }
+            else if (docVersion.Body.Size > 0)
+            {
+              var str = docVersion.Body.Read();
+              str.CopyTo(ms);
+            }
+            docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
           }
         }
-        var DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == inputData.DocumentKind).FirstOrDefault();
-        if (DocumentKind == null)
+        catch (Exception exc)
         {
-          message += string.Format("Не найден вид документа DocumentKind: {0} \r\n", inputData.DocumentKind);
+          Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
         }
-        var author = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.AuthorExtId).FirstOrDefault();
-        if (author == null)
+      }
+      
+      return docDto;
+    }
+    
+    #endregion
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
+    {
+      string employeeExtId = "testData";
+      string errorMSG = string.Empty;
+      int doc = 0;
+      try
+      {
+        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
+        doc = acquaintanceTaskStr.DocumentId;
+
+        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
+        if (employee == null)
         {
-          message += string.Format("Не найден автор документа AuthorExtId: {0} \r\n", inputData.AuthorExtId);
-        }
-        var businessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == inputData.BusinessUnit).FirstOrDefault();
-        if (businessUnit == null)
-        {
-          message += string.Format("Не найден BusinessUnit: {0} \r\n", inputData.BusinessUnit);
-        }
-        var assignee = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.EmployeeExtId).FirstOrDefault();
-        if (assignee == null)
-        {
-          message += string.Format("Не найден сотрудник EmployeeExtId: {0} \r\n", inputData.EmployeeExtId);
+          errorMSG = $"Employee {employeeExtId} not founded";
+          Logger.Error(errorMSG);
         }
         
-        if (!Calendar.TryParseDate(inputData.DocumentDate, out DateTime date))
+        // при попытке получения через get появится ошибка, если не существует документа с таким ид
+        var document = Sungero.Docflow.OfficialDocuments.Null;
+        try
         {
-          message += String.Format("Некорректная дата документа: {0} \r\n", inputData.DocumentDate);
+          document = Sungero.Docflow.OfficialDocuments.Get(doc);
+          if (document == null)
+          {
+            if (errorMSG == "InputDataOK")
+              errorMSG = string.Empty;
+            errorMSG += $"\nDocument {doc} not founded";
+            Logger.Error(errorMSG);
+          }
         }
-        return message;
+        catch
+        {
+          if (errorMSG == "InputDataOK")
+            errorMSG = string.Empty;
+          errorMSG += $"\nDocument {doc} not founded";
+          Logger.Error(errorMSG);
+        }
+
+        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
+        if (document != null && document.HasVersions && employee != null)
+        {
+          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
+          acqTask.Author = employee;
+          acqTask.DocumentGroup.All.Add(document);
+          acqTask.Performers.AddNew().Performer = employee;
+          acqTask.Deadline = Calendar.Now.AddDays(10);
+          acqTask.Save();
+
+          acqTask.Start();
+          acquaintanceTaskStr.Subject = acqTask.Subject;
+          acquaintanceTaskStr.Deadline = acqTask.Deadline;
+          acquaintanceTaskStr.Author = acqTask.Author.Name;
+          acquaintanceTaskStr.Status = acqTask.Status.ToString();
+          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
+          acquaintanceTaskStr.Created = acqTask.Created;
+          acquaintanceTaskStr.Id = acqTask.Id;
+          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
+        }
+
+        return acquaintanceTaskStr;
       }
-      catch (Exception ex)
+      catch (Exception exc)
       {
-        message = ex.Message;
-        //MailController.SendException(ex);
-        return ex.Message;
+        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message + exc.StackTrace);
       }
-
     }
-
+        
+    #region Синхронизация данных
+    
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.IEmployeeStr SyncEmployee(Structures.Module.IEmployeeStr employeeStr)
     {
+      var entityDto = Structures.Module.EmployeeStr.Create();
+      
       try
       {
-        var entityDto = Structures.Module.EmployeeStr.Create();
-        
         var extId = employeeStr.ExtId;
         var entity = Employees.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault();
         if (entity == null)
@@ -478,14 +453,14 @@ namespace sline.Integration.Server
         employeeStr.DateOfBirth = entity.Person.DateOfBirth?.ToString();
         employeeStr.Sex = entity.Person.Sex?.Value;
         employeeStr.EmployeeNumber = entity.EmployeeNumberhprom;
-        
-        return employeeStr;
       }
       catch (Exception exc)
       {
         Logger.Error(" >>> SOFTLINE >>> {exc.Message}, {exc.StackTrace}");
         throw new Exception(exc.Message);
       }
+      
+      return employeeStr;
     }
     public IEmployee InsertEmployee(Structures.Module.IEmployeeStr inputData)
     {
@@ -550,6 +525,13 @@ namespace sline.Integration.Server
         entity.Name = entity.Person.Name;
         entity.EmployeeNumberhprom = inputData.EmployeeNumber;
         entity.Save();
+        
+        var person = entity.Person;
+        if (person != null)
+        {
+          person.Status = entity.Status;
+          person.Save();
+        }
 
         return entity;
       }
@@ -830,8 +812,174 @@ namespace sline.Integration.Server
       }
     }
     
+    #region не работает, позже выяснить почему
+    /*
+    [Public(WebApiRequestType = RequestType.Post)]
+    public bool CreateDocOrder(Structures.Module.IDocStr docStr)
+    {
+      var entityDto = Structures.Module.DocStr.Create();
+      string message = string.Empty;
+      try
+      {
+        message = ValidateStructure(docStr);
+        if (!string.IsNullOrEmpty(message))
+        {
+          Logger.Error($" >>> SOFTLINE >>> {message}");
+          throw new Exception(message);
+        }
+        var order = Orders.Create();
+        order.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
+        var author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
+        order.Author = author;
+        order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == docStr.BusinessUnit).FirstOrDefault();
+        order.Department = Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
+        order.DocumentDate = Calendar.Now;
+        order.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+        Calendar.TryParseDate(docStr.DocumentDate, out DateTime date);
+        order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
+          date.ToString("dd.MM.yyyy") + " на сотрудника - " + order.Assignee.DisplayValue;
+        order.DisplayValue = order.Subject;
+        order.Responsiblehprom = author.Name;
+        order.Responsibleshprom.AddNew().ResponsibleProperty = author;
+        order.OneTimeDochprom = true;
+        order.DepartmentsAffectedPromhprom.AddNew().Department = order.Department;
+        order.ESignhprom = true;
+        order.PreparedBy = author;
+        
+        using (MemoryStream stream = new MemoryStream())
+        {
+          var app = Sungero.Content.AssociatedApplications.GetAll().Where(x => x.Extension == docStr.DocExt).FirstOrDefault();
+          byte[] data = Convert.FromBase64String(docStr.LastVersionBody);
+          stream.Write(data, 0, data.Length);
+          order.CreateVersion();
+          order.LastVersion.AssociatedApplication = app;
+          order.LastVersion.Body.Write(stream);
+        }
+        order.Save();
+
+        var leadingDoc = Sungero.Docflow.OfficialDocuments.GetAll().Where(x => Equals(x.Id.ToString(), docStr.LeadingDocumentId)).FirstOrDefault();
+        if (leadingDoc == null)
+        {
+          message = string.Format("Ведущий документ ИД {0} для приказа {1} ИД {2} не найден", docStr.LeadingDocumentId, docStr.DocumentKind, order.Id);
+          Logger.Debug($" >>> SOFTLINE >>> {message}");
+          SendNotify(author.Person.Email, message);
+        }
+        else
+        {
+          leadingDoc.Relations.Add("Basis", order);
+          leadingDoc.Save();
+        }
+        var task = Sungero.Docflow.PublicFunctions.Module.Remote.CreateApprovalTask(order);
+        if (docStr.Trace)
+        {
+          SendTrace($"Task: {task.Id}");
+          Logger.Debug($" >>> SOFTLINE >>> Task: {task.Id}");
+        }
+        if (task == null)
+        {
+          message = "(ApprovalTask == null)";
+          Logger.Error($" >>> SOFTLINE >>> {message}");
+          throw new Exception(message);
+        }
+        if (task.ApprovalRule == null)
+        {
+          var rule = Sungero.Docflow.ApprovalRuleBases.GetAll().Where(x => x.Name == docStr.ApprovalRule).FirstOrDefault();
+          if (rule == null)
+          {
+            message = string.Format("Not found ApprovalRule: {0}", docStr.ApprovalRule);
+            Logger.ErrorFormat("Not found ApprovalRule: {0}", docStr.ApprovalRule);
+            throw new Exception(message);
+          }
+          task.ApprovalRule = rule;
+          if (docStr.Trace)
+          {
+            Logger.Debug($" >>> SOFTLINE >>> ApprovalRule: {task.ApprovalRule.Name}");
+            SendTrace($"ApprovalRule: {task.ApprovalRule.Name}");
+          }
+        }
+        task.Signatory = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.Signatory).FirstOrDefault();
+        task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+        //task.Save();
+        try
+        {
+          Sungero.Workflow.Functions.TaskRemoteFunctions.Start(task);
+        }
+        catch (Exception ex)
+        {
+          Logger.Error($" >>> SOFTLINE >>> TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
+          SendTrace($"TaskRemoteFunctions.Start() {ex.Message}\n{ex.StackTrace}");
+        }
+        
+        return true;
+      }
+      catch (Exception ex)
+      {
+        SendException(ex.Message, ex.StackTrace);
+        Logger.Error($" >>> SOFTLINE >>> TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
+        return false;
+      }
+
+    }
+    public string ValidateStructure(Structures.Module.IDocStr inputData)
+    {
+      string message = string.Empty;
+      try
+      {
+        var signatory = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.Signatory).FirstOrDefault();
+        if (signatory == null)
+        {
+          message += string.Format("Не найден подписант Signatory: {0} \r\n", inputData.Signatory);
+        }
+        else
+        {
+          var recipient = Sungero.Docflow.SignatureSettings.GetAll().Where(x => Equals(x.Recipient.Id, signatory.Id)).FirstOrDefault();
+          if (recipient == null)
+          {
+            message += string.Format("Нет права подписи у Signatory: {0} \r\n", signatory.Name);
+          }
+        }
+        var DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == inputData.DocumentKind).FirstOrDefault();
+        if (DocumentKind == null)
+        {
+          message += string.Format("Не найден вид документа DocumentKind: {0} \r\n", inputData.DocumentKind);
+        }
+        var author = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.AuthorExtId).FirstOrDefault();
+        if (author == null)
+        {
+          message += string.Format("Не найден автор документа AuthorExtId: {0} \r\n", inputData.AuthorExtId);
+        }
+        var businessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == inputData.BusinessUnit).FirstOrDefault();
+        if (businessUnit == null)
+        {
+          message += string.Format("Не найден BusinessUnit: {0} \r\n", inputData.BusinessUnit);
+        }
+        var assignee = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.EmployeeExtId).FirstOrDefault();
+        if (assignee == null)
+        {
+          message += string.Format("Не найден сотрудник EmployeeExtId: {0} \r\n", inputData.EmployeeExtId);
+        }
+        
+        if (!Calendar.TryParseDate(inputData.DocumentDate, out DateTime date))
+        {
+          message += String.Format("Некорректная дата документа: {0} \r\n", inputData.DocumentDate);
+        }
+        return message;
+      }
+      catch (Exception ex)
+      {
+        message = ex.Message;
+        SendException(ex.Message, ex.StackTrace);
+        return ex.Message;
+      }
+
+    }
+     */
+    #endregion
+    
+    #endregion
+    
     #region Отправка уведомлений в почту
-    public void SendException(Exception ex)
+    public void SendException(string exMessage, string exStackTrace)
     {
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
@@ -842,8 +990,8 @@ namespace sline.Integration.Server
       client.Credentials = new NetworkCredential(mailFrom, password);
       MailMessage message = new MailMessage(mailFrom, mailTo);
       message.To.Add("shirokov@hlebprom.com");
-      message.Body += ex.Message + "<br><br>";
-      message.Body += ex.StackTrace + "<br><br>";
+      message.Body += exMessage + "<br><br>";
+      message.Body += exStackTrace + "<br><br>";
       message.IsBodyHtml = true;
       message.BodyEncoding = System.Text.Encoding.UTF8;
       message.Subject = "IntegrationService Exception";

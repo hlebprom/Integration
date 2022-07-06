@@ -57,21 +57,21 @@ namespace sline.Integration.Structures.Module
   }
 
   [Public]
-  partial class DocumentStr
+  partial class OrderStr
   {
-    public int Id { get; set; }                     // ИД Документа
-    public string DocumentId { get; set; }          // ГУИД Документа
-    public string DocumentKind { get; set; }        // Вид докумена - строка
-    public string LeadingDocumentId { get; set; }   // ИД Заявления для приказа. Если не заполнен?
+    public int Id { get; set; }
+    public string DocumentId { get; set; }
+    public string DocumentKind { get; set; }
+    public string LeadingDocumentId { get; set; }
     public string DocumentDate { get; set; }
     public string DocumentNumber { get; set; }
-    public string AuthorExtId { get; set; }         // Автор документа - сотрудник
-    public string BusinessUnit { get; set; }        // Организация автора
-    public string Department { get; set; }          // Отдел автора приказа
+    public string AuthorExtId { get; set; }
+    public string BusinessUnit { get; set; }
+    public string Department { get; set; }
     public string Signatory { get; set; }
     public string EmployeeExtId { get; set; }
-    public string DocExt { get; set; }              // Расширение файла документа
-    public string LastVersionBody { get; set; }     // Base64 string
+    public string DocExt { get; set; }
+    public string LastVersionBody { get; set; }
     public string ApprovalRule { get; set; }
     public bool Trace { get; set; }
   }
@@ -105,6 +105,40 @@ namespace sline.Integration.Structures.Module
     public bool? NeedNotifyNewAssignments { get; set; }
     public string Status { get; set; }
     public string EmployeeNumber { get; set; }
+  }
+
+  [Public]
+  partial class SupAgreementStr
+  {
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string DocumentKind { get; set; }
+    public int? LeadingDocument { get; set; }
+    public string BusinessUnit { get; set; }
+    public string Subject { get; set; }
+    public string Note { get; set; }
+    public string OurSignatory { get; set; }
+    public string DocumentGroup { get; set; }
+    public string Department { get; set; }
+    public int? CounterpartySignatory { get; set; }
+    public double? TotalAmount { get; set; }
+    public int? Currency { get; set; }
+    public int? Contact { get; set; }
+    public DateTime? ValidFrom { get; set; }
+    public DateTime? ValidTill { get; set; }
+    public string ResponsibleEmployee { get; set; }
+    public string Assignee { get; set; }
+    public bool? IsStandard { get; set; }
+    public bool? IsIsAutomaticRenewal { get; set; }
+    public string RegistrationNumber { get; set; }
+    public DateTime? RegistrationDate { get; set; }
+    public string LastVersionFileName { get; set; }
+    public string LastVersionBody { get; set; }
+    public string Counterparty { get; set; }
+    public DateTime? Created { get; set; }
+    public bool? APIUpdatedhprom { get; set; }
+    public bool? ActionWebApi { get; set; }
+    public string Status { get; set; }
   }
 
 }
