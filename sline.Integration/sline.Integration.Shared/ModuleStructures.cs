@@ -141,4 +141,16 @@ namespace sline.Integration.Structures.Module
     public string Status { get; set; }
   }
 
+  [Public]
+  partial class JobTitleStr
+  {
+    public int Id { get; set; }
+    public string ExtId { get; set; }
+    public string Name { get; set; }
+    public string Status { get; set; }
+  }
+  
+  
+  
+  
 }

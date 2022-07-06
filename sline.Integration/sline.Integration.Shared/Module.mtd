@@ -97,6 +97,19 @@
       "ReturnType": "global::sline.Integration.Structures.Module.IEmployeeStr",
       "ReturnTypeFullName": "sline.Integration.Structures.Module.IEmployeeStr",
       "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "SyncJobTitle",
+      "Parameters": [
+        {
+          "Name": "jobTitleStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.IJobTitleStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IJobTitleStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IJobTitleStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IJobTitleStr",
+      "WebApiRequestType": "Post"
     }
   ],
   "PublicStructures": [
@@ -440,6 +453,32 @@
         },
         {
           "Name": "EmployeeNumber",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "JobTitleStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Status",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
         }

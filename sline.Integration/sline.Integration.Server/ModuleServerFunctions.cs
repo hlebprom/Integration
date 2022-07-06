@@ -12,6 +12,8 @@ namespace sline.Integration.Server
 {
   public class ModuleFunctions
   {
+
+    
     #region Получение данных
     
     [Public(WebApiRequestType = RequestType.Get)]
@@ -339,6 +341,9 @@ namespace sline.Integration.Server
     }
     
     #endregion
+    
+    #region Синхронизация данных
+    
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
     {
@@ -408,8 +413,6 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message + exc.StackTrace);
       }
     }
-        
-    #region Синхронизация данных
     
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.IEmployeeStr SyncEmployee(Structures.Module.IEmployeeStr employeeStr)
@@ -811,6 +814,30 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message);
       }
     }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IJobTitleStr SyncJobTitle(Structures.Module.IJobTitleStr jobTitleStr)
+    {
+      var name = jobTitleStr.Name;
+      var entity = JobTitles.GetAll().FirstOrDefault(e => e.Name == name) ?? JobTitles.Create();
+
+      entity.Name = jobTitleStr.Name;
+      entity.ExtIdhprom = jobTitleStr.ExtId;
+
+      if (jobTitleStr.Status == "Active")
+        entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+      else if (jobTitleStr.Status == "Closed")
+        entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+
+      entity.Save();
+      
+      jobTitleStr.Id = entity.Id;
+      jobTitleStr.ExtId = entity.ExtIdhprom;
+      jobTitleStr.Name = entity.Name;
+      jobTitleStr.Status = entity.Status?.Value;
+      
+      return jobTitleStr;
+    }    
     
     #region не работает, позже выяснить почему
     /*
