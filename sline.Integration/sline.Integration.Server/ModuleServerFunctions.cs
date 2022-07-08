@@ -12,352 +12,8 @@ namespace sline.Integration.Server
 {
   public class ModuleFunctions
   {
-    
-    #region Получение данных
-    
-    [Public(WebApiRequestType = RequestType.Get)]
-    public List<Structures.Module.IContractStr> GetContracts(string sysCode)
-    {
-      List<Structures.Module.IContractStr> result = new List<Structures.Module.IContractStr>();
-      
-      var documents = Contracts.GetAll();
-      if (sysCode == "1C")
-        documents = documents.Where(d => d.DocumentKind.ExportTo1Chprom == true && d.APIUpdatedhprom != false);
-      if (sysCode == "AX")
-        documents = documents.Where(d => d.DocumentKind.ExportToAXhprom == true && d.APIUpdatedhprom != false);
-
-      foreach (var doc in documents)
-      {
-        if (!doc.DocumentKind.Name.ToLower().Contains("нетиповой"))
-        {
-          try
-          {
-            var docDto = Structures.Module.ContractStr.Create();
-            docDto = CopyFromEntity(doc);
-            docDto.APIUpdatedhprom = false;
-            docDto.ActionWebApi = true;
-            docDto = SaveEntity(docDto);
-            
-            result.Add(docDto);
-          }
-          catch (Exception exc)
-          {
-            try
-            {
-              var docDto = Structures.Module.ContractStr.Create();
-              docDto.Id = doc.Id;
-              docDto.Note = exc.Message;
-              
-              result.Add(docDto);
-            }
-            catch
-            { }
-          }
-        }
-        else
-        {
-          if (doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.Signed
-              || doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.PendingSign)
-          {
-            try
-            {
-              var docDto = Structures.Module.ContractStr.Create();
-              docDto = CopyFromEntity(doc);
-              docDto.APIUpdatedhprom = false;
-              docDto.ActionWebApi = true;
-              docDto = SaveEntity(docDto);
-              
-              result.Add(docDto);
-            }
-            catch (Exception exc)
-            {
-              try
-              {
-                var docDto = Structures.Module.ContractStr.Create();
-                docDto.Id = doc.Id;
-                docDto.Note = exc.Message;
-                
-                result.Add(docDto);
-              }
-              catch
-              { }
-            }
-          }
-        }
-      }
-
-      return result;
-    }
-    public Structures.Module.IContractStr CopyFromEntity(IContract entity)
-    {
-      var docDto = Structures.Module.ContractStr.Create();
-      docDto.Id = entity.Id;
-      docDto.Name = entity.Name;
-      docDto.DocumentKind = entity.DocumentKind?.Name;
-      
-      var bu = BusinessUnits.As(entity.BusinessUnit);
-      docDto.BusinessUnit = bu?.ExtIdhprom;
-      docDto.Subject = entity.Subject;
-      docDto.Note = entity.Note;
-      
-      var ourSign = Employees.As(entity.OurSignatory);
-      docDto.OurSignatory = ourSign?.ExtIdhprom;
-      docDto.DocumentGroup = entity.DocumentGroup?.Name;
-      
-      var dep = Departments.As(entity.OurSignatory);
-      docDto.Department = dep?.ExtIdhprom;
-      docDto.IsAutomaticRenewal = entity.IsAutomaticRenewal;
-      docDto.RegistrationNumber = entity.RegistrationNumber;
-      docDto.RegistrationDate = entity.RegistrationDate;
-
-      var counterparty = entity.Counterparty;
-      if (Companies.Is(counterparty))
-        docDto.Counterparty = Companies.As(counterparty)?.ExtIdhprom;
-
-      docDto.Created = entity.Created;
-      docDto.CounterpartySignatory = entity.CounterpartySignatory?.Id;
-      if (entity.TotalAmount == null)
-        docDto.TotalAmount = 0;
-      else
-        docDto.TotalAmount = entity.TotalAmount;
-      
-      docDto.Currency = entity.Currency?.Id;
-      docDto.Contact = entity.Contact?.Id;
-      docDto.ValidFrom = entity.ValidFrom;
-      docDto.ValidTill = entity.ValidTill;
-
-      var resp = Employees.As(entity.Responsiblehprom);
-      docDto.ResponsibleEmployee = resp?.ExtIdhprom;
-      docDto.IsStandard = entity.IsStandard;
-      docDto.APIUpdatedhprom = entity.APIUpdatedhprom;
-      docDto.ActionWebApi = entity.ActionWebApihprom;
-
-      docDto.Status = GetContractStatus(docDto.Id);
-      docDto.APIUpdatedhprom = false;
-      docDto.ActionWebApi = true;
-      
-      return docDto;
-    }
-    public Structures.Module.IContractStr SaveEntity(Structures.Module.IContractStr docDto)
-    {
-      var entity = Contracts.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id)) ?? Contracts.Create();
-      entity.ActionWebApihprom = docDto.ActionWebApi;
-      entity.Save();
-      docDto = CopyFromEntity(entity);
-      
-      var docVersion = entity.LastVersion;
-      if (docVersion != null)
-      {
-        try
-        {
-          docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
-          using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-          {
-            if (docVersion.PublicBody.Size > 0)
-            {
-              var str = docVersion.PublicBody.Read();
-              str.CopyTo(ms);
-            }
-            else if (docVersion.Body.Size > 0)
-            {
-              var str = docVersion.Body.Read();
-              str.CopyTo(ms);
-            }
-            docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
-          }
-        }
-        catch (Exception exc)
-        {
-          Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
-        }
-      }
-      
-      return docDto;
-    }
-    
-    [Public(WebApiRequestType = RequestType.Get)]
-    public List<Structures.Module.ISupAgreementStr> GetSupAgreements(string sysCode)
-    {
-      List<Structures.Module.ISupAgreementStr> result = new List<Structures.Module.ISupAgreementStr>();
-      var documents = SupAgreements.GetAll();
-
-      if (sysCode == "1C")
-        documents = documents.Where(d => d.DocumentKind.ExportTo1Chprom == true && d.APIUpdatedhprom != false);
-      if (sysCode == "AX")
-        documents = documents.Where(d => d.DocumentKind.ExportToAXhprom == true && d.APIUpdatedhprom != false);
-
-      foreach (var doc in documents)
-      {
-        if (doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.Signed
-            || doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.PendingSign)
-        {
-          try
-          {
-            var docDto = Structures.Module.SupAgreementStr.Create();
-            docDto = CopyFromEntity(doc);
-            docDto.APIUpdatedhprom = false;
-            docDto.ActionWebApi = true;
-            docDto = SaveEntity(docDto);
-            
-            result.Add(docDto);
-          }
-          catch(Exception exc)
-          {
-            try
-            {
-              var docDto = Structures.Module.SupAgreementStr.Create();
-              docDto.Id = doc.Id;
-              docDto.Note = exc.Message;
-              
-              result.Add(docDto);
-            }
-            catch { }
-          }
-        }
-      }
-
-      return result;
-    }
-    public Structures.Module.ISupAgreementStr CopyFromEntity(ISupAgreement entity)
-    {
-      var docDto = Structures.Module.SupAgreementStr.Create();
-      docDto.Id = entity.Id;
-      docDto.Name = entity.Name;
-      docDto.DocumentKind = entity.DocumentKind?.Name;
-
-      docDto.LeadingDocument = entity.LeadingDocument?.Id;
-      var bu = BusinessUnits.As(entity.BusinessUnit);
-      docDto.BusinessUnit = bu?.ExtIdhprom;
-      docDto.Subject = entity.Subject;
-      docDto.Note = entity.Note;
-      var ourSign = Employees.As(entity.OurSignatory);
-      docDto.OurSignatory = ourSign?.ExtIdhprom;
-      docDto.DocumentGroup = entity.DocumentGroup?.Name;
-      // TODO RomanovSL Обсудить корректность реализации в WebApi
-      /*var dep = entity.OurSignatory as hprom.DocflowExt.IDepartment;
-      docDto.Department = dep?.ExtIdhprom;*/
-      docDto.IsIsAutomaticRenewal = entity.LeadingDocument?.IsAutomaticRenewal;
-      docDto.RegistrationNumber = entity.RegistrationNumber;
-      docDto.RegistrationDate = entity.RegistrationDate;
-      var counterparty = entity.Counterparty;
-      if (Companies.Is(counterparty))
-      {
-        docDto.Counterparty = Companies.As(counterparty)?.ExtIdhprom;
-      }
-      docDto.CounterpartySignatory = entity.CounterpartySignatory?.Id;
-      if (entity.TotalAmount == null)
-        docDto.TotalAmount = 0;
-      else
-        docDto.TotalAmount = entity.TotalAmount;
-      docDto.Currency = entity.Currency?.Id;
-      docDto.Contact = entity.Contact?.Id;
-      docDto.ValidFrom = entity.ValidFrom;
-      docDto.ValidTill = entity.ValidTill;
-
-      docDto.Created = entity.Created;
-
-      var ldoc = Contracts.As(entity.LeadingDocument);
-      var resp = Employees.As(ldoc?.Responsiblehprom);
-      docDto.ResponsibleEmployee = resp?.ExtIdhprom;
-      docDto.IsStandard = entity.IsStandard;
-      docDto.APIUpdatedhprom = entity.APIUpdatedhprom;
-      docDto.ActionWebApi = entity.ActionWebApihprom;
-      docDto.Status = GetContractStatus(docDto.Id);
-      
-      return docDto;
-    }
-    public Structures.Module.ISupAgreementStr SaveEntity(Structures.Module.ISupAgreementStr docDto)
-    {
-      var entity = SupAgreements.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id)) ?? SupAgreements.Create();
-      entity.ActionWebApihprom = docDto.ActionWebApi;
-      entity.Save();
-      docDto = CopyFromEntity(entity);
-      
-      var docVersion = entity.LastVersion;
-      if (docVersion != null)
-      {
-        try
-        {
-          docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
-          using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-          {
-            if (docVersion.PublicBody.Size > 0)
-            {
-              var str = docVersion.PublicBody.Read();
-              str.CopyTo(ms);
-            }
-            else if (docVersion.Body.Size > 0)
-            {
-              var str = docVersion.Body.Read();
-              str.CopyTo(ms);
-            }
-            docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
-          }
-        }
-        catch (Exception exc)
-        {
-          Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
-        }
-      }
-      
-      return docDto;
-    }
-    
-    public string GetContractStatus(int idDoc)
-    {
-      var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
-      int id = 0;
-      var mainTask = ApprovalTasks.Null;
-      foreach (var item in allTask)
-      {
-        if (item.Id > id)
-        {
-          id = item.Id;
-          mainTask = item;
-        }
-      }
-      if (mainTask == null)
-        return "Without task";
-      else
-      {
-        if (mainTask.Status == Sungero.Workflow.Task.Status.Completed)
-          return "Подписан";
-
-        bool checkApprovalStatus = true;
-        var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(x => Equals(x.MainTask.Id, mainTask.Id));
-        foreach (var assign in allAssignments)
-        {
-          bool likeApprAs = ApprovalAssignments.Is(assign);
-          bool likeManApprAs = ApprovalManagerAssignments.Is(assign);
-
-          if ((likeApprAs || likeManApprAs) && assign.Status == Sungero.Workflow.Assignment.Status.InProcess)
-            checkApprovalStatus = false;
-        }
-        if (checkApprovalStatus)
-          return "Согласовано";
-        else
-          return "На согласовании";
-      }
-    }
-    
-    [Public(WebApiRequestType = RequestType.Get)]
-    public Structures.Module.ICompanyStr GetCompany(string extId)
-    {
-      var entityDto = Structures.Module.CompanyStr.Create();
-
-      var entity = Companies.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault();
-      if (entity != null)
-        entityDto = CopyFromEntity(entity);
-      
-      return entityDto;
-    }
-    
-    #endregion
-    
     #region Синхронизация данных
-    
-    #region ОШС
-    
+
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.IEmployeeStr SyncEmployee(Structures.Module.IEmployeeStr employeeStr)
     {
@@ -403,7 +59,7 @@ namespace sline.Integration.Server
       }
       catch (Exception exc)
       {
-        Logger.Error(" >>> SOFTLINE >>> {exc.Message}, {exc.StackTrace}");
+        Logger.Error($" >>> SOFTLINE >>> {exc.Message}, {exc.StackTrace}");
         throw new Exception(exc.Message);
       }
       
@@ -417,40 +73,44 @@ namespace sline.Integration.Server
         var extId = inputData.ExtId;
         entity.ExtIdhprom = extId;
         entity.PersonExtIdhprom = inputData.Person;
+        
+        var person = People.GetAll().FirstOrDefault(x => x.ExtIdhprom == inputData.Person) ?? People.Create();
         if (inputData.LastName != null)
-          entity.Person.LastName = inputData.LastName;
+          person.LastName = inputData.LastName;
         if (inputData.FirstName != null)
-          entity.Person.FirstName = inputData.FirstName;
+          person.FirstName = inputData.FirstName;
         if (inputData.MiddleName != null)
-          entity.Person.MiddleName = inputData.MiddleName;
+          person.MiddleName = inputData.MiddleName;
         if (inputData.TIN != null)
-          entity.Person.TIN = inputData.TIN;
+          person.TIN = inputData.TIN;
         if (inputData.INILA != null)
-          entity.Person.INILA = inputData.INILA;
+          person.INILA = inputData.INILA;
         var dateOfBirth = inputData.DateOfBirth;
         if (!string.IsNullOrEmpty(dateOfBirth))
-          entity.Person.DateOfBirth = Convert.ToDateTime(dateOfBirth);
+          person.DateOfBirth = Convert.ToDateTime(dateOfBirth);
         else
-          entity.Person.DateOfBirth = null;
+          person.DateOfBirth = null;
         if (inputData.Sex != null)
         {
           if (inputData.Sex == "Male")
-            entity.Person.Sex = Sungero.Parties.Person.Sex.Male;
+            person.Sex = Sungero.Parties.Person.Sex.Male;
           else if (inputData.Sex == "Female")
-            entity.Person.Sex = Sungero.Parties.Person.Sex.Female;
+            person.Sex = Sungero.Parties.Person.Sex.Female;
         }
         if (inputData.Status == "Active")
         {
           entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
-          entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+          person.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
         }
         else if (inputData.Status == "Closed")
         {
           entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
           entity.Login = null;
-          entity.Person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+          person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
         }
-        entity.Person.Save();
+        person.Save();
+        entity.Person = person;
+        
         if (inputData.Login != null)
           entity.Login = Sungero.CoreEntities.Logins.GetAll().Where(l => l.LoginName == inputData.Login).FirstOrDefault();
         if (inputData.JobTitle != null)
@@ -473,7 +133,6 @@ namespace sline.Integration.Server
         entity.EmployeeNumberhprom = inputData.EmployeeNumber;
         entity.Save();
         
-        var person = entity.Person;
         if (person != null)
         {
           person.Status = entity.Status;
@@ -884,79 +543,7 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message);
       }
     }
-    
-    #endregion
-    
-    [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
-    {
-      string employeeExtId = "testData";
-      string errorMSG = string.Empty;
-      int doc = 0;
-      try
-      {
-        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
-        doc = acquaintanceTaskStr.DocumentId;
-
-        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
-        if (employee == null)
-        {
-          errorMSG = $"Employee {employeeExtId} not founded";
-          Logger.Error(errorMSG);
-        }
-        
-        // при попытке получения через get появится ошибка, если не существует документа с таким ид
-        var document = Sungero.Docflow.OfficialDocuments.Null;
-        try
-        {
-          document = Sungero.Docflow.OfficialDocuments.Get(doc);
-          if (document == null)
-          {
-            if (errorMSG == "InputDataOK")
-              errorMSG = string.Empty;
-            errorMSG += $"\nDocument {doc} not founded";
-            Logger.Error(errorMSG);
-          }
-        }
-        catch
-        {
-          if (errorMSG == "InputDataOK")
-            errorMSG = string.Empty;
-          errorMSG += $"\nDocument {doc} not founded";
-          Logger.Error(errorMSG);
-        }
-
-        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
-        if (document != null && document.HasVersions && employee != null)
-        {
-          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
-          acqTask.Author = employee;
-          acqTask.DocumentGroup.All.Add(document);
-          acqTask.Performers.AddNew().Performer = employee;
-          acqTask.Deadline = Calendar.Now.AddDays(10);
-          acqTask.Save();
-
-          acqTask.Start();
-          acquaintanceTaskStr.Subject = acqTask.Subject;
-          acquaintanceTaskStr.Deadline = acqTask.Deadline;
-          acquaintanceTaskStr.Author = acqTask.Author.Name;
-          acquaintanceTaskStr.Status = acqTask.Status.ToString();
-          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
-          acquaintanceTaskStr.Created = acqTask.Created;
-          acquaintanceTaskStr.Id = acqTask.Id;
-          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
-        }
-
-        return acquaintanceTaskStr;
-      }
-      catch (Exception exc)
-      {
-        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
-        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
-        throw new Exception(exc.Message + exc.StackTrace);
-      }
-    }
-        
+            
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.ICityStr SyncCity(Structures.Module.ICityStr cityStr)
     {
@@ -964,7 +551,7 @@ namespace sline.Integration.Server
       var entity = Cities.GetAll().FirstOrDefault(e => e.Region.Code == cityStr.Region && e.Name.Contains(cityStr.Name)) ?? Cities.Create();
       entity.Name = cityStr.Name;
       entity.Region = Sungero.Commons.Regions.GetAll().Where(r => r.Code == cityStr.Region).FirstOrDefault();
-      entity.Country = Sungero.Commons.Countries.GetAll().Where(r => r.Code == cityStr.Region).FirstOrDefault();
+      entity.Country = Sungero.Commons.Countries.GetAll().Where(r => r.Code == cityStr.Country).FirstOrDefault();
 
       if (cityStr.Status == "Active")
         entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
@@ -1108,7 +695,422 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message);
       }
     }
+
+    #endregion
+    
+    #region Получение данных
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public List<Structures.Module.IContractStr> GetContracts(string sysCode)
+    {
+      List<Structures.Module.IContractStr> result = new List<Structures.Module.IContractStr>();
+      
+      var documents = Contracts.GetAll();
+      if (sysCode == "1C")
+        documents = documents.Where(d => d.DocumentKind.ExportTo1Chprom == true && d.APIUpdatedhprom != false);
+      if (sysCode == "AX")
+        documents = documents.Where(d => d.DocumentKind.ExportToAXhprom == true && d.APIUpdatedhprom != false);
+
+      foreach (var doc in documents)
+      {
+        if (!doc.DocumentKind.Name.ToLower().Contains("нетиповой"))
+        {
+          try
+          {
+            var docDto = Structures.Module.ContractStr.Create();
+            docDto = CopyFromEntity(doc);
+            docDto.APIUpdatedhprom = false;
+            docDto.ActionWebApi = true;
+            docDto = SaveEntity(docDto);
+            
+            result.Add(docDto);
+          }
+          catch (Exception exc)
+          {
+            try
+            {
+              var docDto = Structures.Module.ContractStr.Create();
+              docDto.Id = doc.Id;
+              docDto.Note = exc.Message;
+              
+              result.Add(docDto);
+            }
+            catch
+            { }
+          }
+        }
+        else
+        {
+          if (doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.Signed
+              || doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.PendingSign)
+          {
+            try
+            {
+              var docDto = Structures.Module.ContractStr.Create();
+              docDto = CopyFromEntity(doc);
+              docDto.APIUpdatedhprom = false;
+              docDto.ActionWebApi = true;
+              docDto = SaveEntity(docDto);
+              
+              result.Add(docDto);
+            }
+            catch (Exception exc)
+            {
+              try
+              {
+                var docDto = Structures.Module.ContractStr.Create();
+                docDto.Id = doc.Id;
+                docDto.Note = exc.Message;
+                
+                result.Add(docDto);
+              }
+              catch
+              { }
+            }
+          }
+        }
+      }
+
+      return result;
+    }
+    public Structures.Module.IContractStr CopyFromEntity(IContract entity)
+    {
+      var docDto = Structures.Module.ContractStr.Create();
+      docDto.Id = entity.Id;
+      docDto.Name = entity.Name;
+      docDto.DocumentKind = entity.DocumentKind?.Name;
+      
+      var bu = BusinessUnits.As(entity.BusinessUnit);
+      docDto.BusinessUnit = bu?.ExtIdhprom;
+      docDto.Subject = entity.Subject;
+      docDto.Note = entity.Note;
+      
+      var ourSign = Employees.As(entity.OurSignatory);
+      docDto.OurSignatory = ourSign?.ExtIdhprom;
+      docDto.DocumentGroup = entity.DocumentGroup?.Name;
+      
+      var dep = Departments.As(entity.OurSignatory);
+      docDto.Department = dep?.ExtIdhprom;
+      docDto.IsAutomaticRenewal = entity.IsAutomaticRenewal;
+      docDto.RegistrationNumber = entity.RegistrationNumber;
+      docDto.RegistrationDate = entity.RegistrationDate;
+
+      var counterparty = entity.Counterparty;
+      if (Companies.Is(counterparty))
+        docDto.Counterparty = Companies.As(counterparty)?.ExtIdhprom;
+
+      docDto.Created = entity.Created;
+      docDto.CounterpartySignatory = entity.CounterpartySignatory?.Id;
+      if (entity.TotalAmount == null)
+        docDto.TotalAmount = 0;
+      else
+        docDto.TotalAmount = entity.TotalAmount;
+      
+      docDto.Currency = entity.Currency?.Id;
+      docDto.Contact = entity.Contact?.Id;
+      docDto.ValidFrom = entity.ValidFrom;
+      docDto.ValidTill = entity.ValidTill;
+
+      var resp = Employees.As(entity.Responsiblehprom);
+      docDto.ResponsibleEmployee = resp?.ExtIdhprom;
+      docDto.IsStandard = entity.IsStandard;
+      docDto.APIUpdatedhprom = entity.APIUpdatedhprom;
+      docDto.ActionWebApi = entity.ActionWebApihprom;
+
+      docDto.Status = GetContractStatus(docDto.Id);
+      docDto.APIUpdatedhprom = false;
+      docDto.ActionWebApi = true;
+      
+      return docDto;
+    }
+    public Structures.Module.IContractStr SaveEntity(Structures.Module.IContractStr docDto)
+    {
+      var entity = Contracts.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id)) ?? Contracts.Create();
+      entity.ActionWebApihprom = docDto.ActionWebApi;
+      entity.Save();
+      docDto = CopyFromEntity(entity);
+      
+      var docVersion = entity.LastVersion;
+      if (docVersion != null)
+      {
+        try
+        {
+          docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
+          using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+          {
+            if (docVersion.PublicBody.Size > 0)
+            {
+              var str = docVersion.PublicBody.Read();
+              str.CopyTo(ms);
+            }
+            else if (docVersion.Body.Size > 0)
+            {
+              var str = docVersion.Body.Read();
+              str.CopyTo(ms);
+            }
+            docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
+          }
+        }
+        catch (Exception exc)
+        {
+          Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        }
+      }
+      
+      return docDto;
+    }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public List<Structures.Module.ISupAgreementStr> GetSupAgreements(string sysCode)
+    {
+      List<Structures.Module.ISupAgreementStr> result = new List<Structures.Module.ISupAgreementStr>();
+      var documents = SupAgreements.GetAll();
+
+      if (sysCode == "1C")
+        documents = documents.Where(d => d.DocumentKind.ExportTo1Chprom == true && d.APIUpdatedhprom != false);
+      if (sysCode == "AX")
+        documents = documents.Where(d => d.DocumentKind.ExportToAXhprom == true && d.APIUpdatedhprom != false);
+
+      foreach (var doc in documents)
+      {
+        if (doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.Signed
+            || doc.InternalApprovalState == Sungero.Docflow.OfficialDocument.InternalApprovalState.PendingSign)
+        {
+          try
+          {
+            var docDto = Structures.Module.SupAgreementStr.Create();
+            docDto = CopyFromEntity(doc);
+            docDto.APIUpdatedhprom = false;
+            docDto.ActionWebApi = true;
+            docDto = SaveEntity(docDto);
+            
+            result.Add(docDto);
+          }
+          catch(Exception exc)
+          {
+            try
+            {
+              var docDto = Structures.Module.SupAgreementStr.Create();
+              docDto.Id = doc.Id;
+              docDto.Note = exc.Message;
+              
+              result.Add(docDto);
+            }
+            catch { }
+          }
+        }
+      }
+
+      return result;
+    }
+    public Structures.Module.ISupAgreementStr CopyFromEntity(ISupAgreement entity)
+    {
+      var docDto = Structures.Module.SupAgreementStr.Create();
+      docDto.Id = entity.Id;
+      docDto.Name = entity.Name;
+      docDto.DocumentKind = entity.DocumentKind?.Name;
+
+      docDto.LeadingDocument = entity.LeadingDocument?.Id;
+      var bu = BusinessUnits.As(entity.BusinessUnit);
+      docDto.BusinessUnit = bu?.ExtIdhprom;
+      docDto.Subject = entity.Subject;
+      docDto.Note = entity.Note;
+      var ourSign = Employees.As(entity.OurSignatory);
+      docDto.OurSignatory = ourSign?.ExtIdhprom;
+      docDto.DocumentGroup = entity.DocumentGroup?.Name;
+      // TODO RomanovSL Обсудить корректность реализации в WebApi
+      /*var dep = entity.OurSignatory as hprom.DocflowExt.IDepartment;
+      docDto.Department = dep?.ExtIdhprom;*/
+      docDto.IsIsAutomaticRenewal = entity.LeadingDocument?.IsAutomaticRenewal;
+      docDto.RegistrationNumber = entity.RegistrationNumber;
+      docDto.RegistrationDate = entity.RegistrationDate;
+      var counterparty = entity.Counterparty;
+      if (Companies.Is(counterparty))
+      {
+        docDto.Counterparty = Companies.As(counterparty)?.ExtIdhprom;
+      }
+      docDto.CounterpartySignatory = entity.CounterpartySignatory?.Id;
+      if (entity.TotalAmount == null)
+        docDto.TotalAmount = 0;
+      else
+        docDto.TotalAmount = entity.TotalAmount;
+      docDto.Currency = entity.Currency?.Id;
+      docDto.Contact = entity.Contact?.Id;
+      docDto.ValidFrom = entity.ValidFrom;
+      docDto.ValidTill = entity.ValidTill;
+
+      docDto.Created = entity.Created;
+
+      var ldoc = Contracts.As(entity.LeadingDocument);
+      var resp = Employees.As(ldoc?.Responsiblehprom);
+      docDto.ResponsibleEmployee = resp?.ExtIdhprom;
+      docDto.IsStandard = entity.IsStandard;
+      docDto.APIUpdatedhprom = entity.APIUpdatedhprom;
+      docDto.ActionWebApi = entity.ActionWebApihprom;
+      docDto.Status = GetContractStatus(docDto.Id);
+      
+      return docDto;
+    }
+    public Structures.Module.ISupAgreementStr SaveEntity(Structures.Module.ISupAgreementStr docDto)
+    {
+      var entity = SupAgreements.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id)) ?? SupAgreements.Create();
+      entity.ActionWebApihprom = docDto.ActionWebApi;
+      entity.Save();
+      docDto = CopyFromEntity(entity);
+      
+      var docVersion = entity.LastVersion;
+      if (docVersion != null)
+      {
+        try
+        {
+          docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
+          using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+          {
+            if (docVersion.PublicBody.Size > 0)
+            {
+              var str = docVersion.PublicBody.Read();
+              str.CopyTo(ms);
+            }
+            else if (docVersion.Body.Size > 0)
+            {
+              var str = docVersion.Body.Read();
+              str.CopyTo(ms);
+            }
+            docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
+          }
+        }
+        catch (Exception exc)
+        {
+          Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        }
+      }
+      
+      return docDto;
+    }
+    
+    public string GetContractStatus(int idDoc)
+    {
+      var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
+      int id = 0;
+      var mainTask = ApprovalTasks.Null;
+      foreach (var item in allTask)
+      {
+        if (item.Id > id)
+        {
+          id = item.Id;
+          mainTask = item;
+        }
+      }
+      if (mainTask == null)
+        return "Without task";
+      else
+      {
+        if (mainTask.Status == Sungero.Workflow.Task.Status.Completed)
+          return "Подписан";
+
+        bool checkApprovalStatus = true;
+        var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(x => Equals(x.MainTask.Id, mainTask.Id));
+        foreach (var assign in allAssignments)
+        {
+          bool likeApprAs = ApprovalAssignments.Is(assign);
+          bool likeManApprAs = ApprovalManagerAssignments.Is(assign);
+
+          if ((likeApprAs || likeManApprAs) && assign.Status == Sungero.Workflow.Assignment.Status.InProcess)
+            checkApprovalStatus = false;
+        }
+        if (checkApprovalStatus)
+          return "Согласовано";
+        else
+          return "На согласовании";
+      }
+    }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public Structures.Module.ICompanyStr GetCompany(string extId)
+    {
+      var entityDto = Structures.Module.CompanyStr.Create();
+
+      var entity = Companies.GetAll().Where(e => e.ExtIdhprom == extId).FirstOrDefault();
+      if (entity != null)
+        entityDto = CopyFromEntity(entity);
+      
+      return entityDto;
+    }
+    
+    #endregion
+    
+    #region Создание данных
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IAcquaintanceTaskStr CreateAcquaintanceTask(Structures.Module.IAcquaintanceTaskStr acquaintanceTaskStr)
+    {
+      string employeeExtId = "testData";
+      string errorMSG = string.Empty;
+      int doc = 0;
+      try
+      {
+        employeeExtId = acquaintanceTaskStr.EmployeeExtId;
+        doc = acquaintanceTaskStr.DocumentId;
+
+        var employee = Employees.GetAll().Where(e => e.ExtIdhprom == employeeExtId).FirstOrDefault();
+        if (employee == null)
+        {
+          errorMSG = $"Employee {employeeExtId} not founded";
+          Logger.Error(errorMSG);
+        }
         
+        // при попытке получения через get появится ошибка, если не существует документа с таким ид
+        var document = Sungero.Docflow.OfficialDocuments.Null;
+        try
+        {
+          document = Sungero.Docflow.OfficialDocuments.Get(doc);
+          if (document == null)
+          {
+            if (errorMSG == "InputDataOK")
+              errorMSG = string.Empty;
+            errorMSG += $"\nDocument {doc} not founded";
+            Logger.Error(errorMSG);
+          }
+        }
+        catch
+        {
+          if (errorMSG == "InputDataOK")
+            errorMSG = string.Empty;
+          errorMSG += $"\nDocument {doc} not founded";
+          Logger.Error(errorMSG);
+        }
+
+        var acqTask = Sungero.RecordManagement.AcquaintanceTasks.Create();
+        if (document != null && document.HasVersions && employee != null)
+        {
+          // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
+          acqTask.Author = employee;
+          acqTask.DocumentGroup.All.Add(document);
+          acqTask.Performers.AddNew().Performer = employee;
+          acqTask.Deadline = Calendar.Now.AddDays(10);
+          acqTask.Save();
+
+          acqTask.Start();
+          acquaintanceTaskStr.Subject = acqTask.Subject;
+          acquaintanceTaskStr.Deadline = acqTask.Deadline;
+          acquaintanceTaskStr.Author = acqTask.Author.Name;
+          acquaintanceTaskStr.Status = acqTask.Status.ToString();
+          acquaintanceTaskStr.Importance = acqTask.Importance.ToString();
+          acquaintanceTaskStr.Created = acqTask.Created;
+          acquaintanceTaskStr.Id = acqTask.Id;
+          //acquaintanceTaskStr.MainTask = acqTask.MainTask.Id;
+        }
+
+        return acquaintanceTaskStr;
+      }
+      catch (Exception exc)
+      {
+        //SendMessage("Логи ошибки при отправке задачи на ознакомление",employeeExtId, doc.ToString(),errorMSG, exc.Message, exc.StackTrace);
+        Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+        throw new Exception(exc.Message + exc.StackTrace);
+      }
+    }
+                
     [Public(WebApiRequestType = RequestType.Post)]
     public bool? CreateDocumentOrder(Structures.Module.IDocumentOrderStr docStr)
     {
@@ -1270,7 +1272,7 @@ namespace sline.Integration.Server
     }
         
     #endregion
-    
+        
     #region Отправка уведомлений в почту
     
     public void SendException(string exMessage, string exStackTrace)
