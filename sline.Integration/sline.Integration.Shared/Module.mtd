@@ -912,6 +912,16 @@
           "TypeFullName": "global::System.String"
         },
         {
+          "Name": "LegalAddress",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "PostalAddress",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
           "Name": "Department",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
@@ -1186,7 +1196,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.3",
+  "Version": "0.0.1.4",
   "Widgets": [],
   "Versions": [
     {

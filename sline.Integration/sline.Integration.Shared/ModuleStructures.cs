@@ -191,6 +191,8 @@ namespace sline.Integration.Structures.Module
     public bool? IsSystem { get; set; }
     public string Login { get; set; }
     public string Person { get; set; }
+    public string LegalAddress { get; set; }
+    public string PostalAddress { get; set; }
     public string Department { get; set; }
     public string JobTitle { get; set; }
     public string Phone { get; set; }

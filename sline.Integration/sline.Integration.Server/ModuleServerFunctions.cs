@@ -128,6 +128,8 @@ namespace sline.Integration.Server
         if (inputData.NeedNotifyNewAssignments != null)
           entity.NeedNotifyNewAssignments = inputData.NeedNotifyNewAssignments;
         entity.AdmManagerExtIdhprom = inputData.AdministrativeManager;
+        entity.LegalAddresshprom = inputData.LegalAddress;
+        entity.ActualAddresshprom = inputData.PostalAddress;
         entity.FuncManagerExtIdhprom = inputData.FunctionalManager;
         entity.Name = entity.Person.Name;
         entity.EmployeeNumberhprom = inputData.EmployeeNumber;
@@ -355,6 +357,25 @@ namespace sline.Integration.Server
             isUpdateted = true;
           }
         }
+        
+        if (inputData.LegalAddress != null)
+        {
+          if (entity.LegalAddresshprom != inputData.LegalAddress)
+          {
+            entity.LegalAddresshprom = inputData.LegalAddress;
+            isUpdateted = true;
+          }
+        }
+        
+        if (inputData.PostalAddress != null)
+        {
+          if (entity.ActualAddresshprom != inputData.PostalAddress)
+          {
+            entity.ActualAddresshprom = inputData.PostalAddress;
+            isUpdateted = true;
+          }
+        }        
+        
         if (inputData.Email != null)
         {
           if (entity.Email != inputData.Email)
@@ -543,7 +564,7 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message);
       }
     }
-            
+    
     [Public(WebApiRequestType = RequestType.Post)]
     public Structures.Module.ICityStr SyncCity(Structures.Module.ICityStr cityStr)
     {
@@ -1110,7 +1131,7 @@ namespace sline.Integration.Server
         throw new Exception(exc.Message + exc.StackTrace);
       }
     }
-                
+    
     [Public(WebApiRequestType = RequestType.Post)]
     public bool? CreateDocumentOrder(Structures.Module.IDocumentOrderStr docStr)
     {
@@ -1270,9 +1291,9 @@ namespace sline.Integration.Server
       }
 
     }
-        
+    
     #endregion
-        
+    
     #region Отправка уведомлений в почту
     
     public void SendException(string exMessage, string exStackTrace)
