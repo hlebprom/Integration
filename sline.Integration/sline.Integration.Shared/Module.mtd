@@ -721,7 +721,7 @@
           "TypeFullName": "global::System.String"
         },
         {
-          "Name": "Phone",
+          "Name": "PhoneDepart",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
         },
@@ -1012,6 +1012,11 @@
         {
           "Name": "Id",
           "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
         },
         {
           "Name": "LoginName",

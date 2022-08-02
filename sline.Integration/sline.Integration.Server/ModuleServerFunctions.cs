@@ -1153,7 +1153,7 @@ namespace sline.Integration.Server
         order.Department = Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
         order.DocumentDate = Calendar.Now;
         order.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
-        Calendar.TryParseDate(docStr.DocumentDate, out DateTime date);
+        Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
         order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
           date.ToString("dd.MM.yyyy") + " на сотрудника - " + order.Assignee.DisplayValue;
         order.DisplayValue = order.Subject;
@@ -1163,6 +1163,7 @@ namespace sline.Integration.Server
         order.DepartmentsAffectedPromhprom.AddNew().Department = order.Department;
         order.ESignhprom = true;
         order.PreparedBy = author;
+        order.sig
         
         using (MemoryStream stream = new MemoryStream())
         {
@@ -1215,7 +1216,7 @@ namespace sline.Integration.Server
             SendTrace($"ApprovalRule: {task.ApprovalRule.Name}");
           }
         }
-        task.Signatory = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.Signatory).FirstOrDefault();
+        task.Signatory = Employees.GetAll().Where(x => x.Id == docStr.Signatory).FirstOrDefault();
         task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
         //task.Save();
         try

@@ -11,6 +11,7 @@ namespace sline.Integration.Structures.Module
   partial class LoginStr
   {
     public int Id { get; set; }
+    public string ExtId { get; set; }
     public string LoginName { get; set; }
     public string TypeAuthentication { get; set; }
     public bool? NeedChangePassword { get; set; }
@@ -28,7 +29,7 @@ namespace sline.Integration.Structures.Module
     public bool? IsSystem { get; set; }
     public string Manager { get; set; }
     public string HeadOffice { get; set; }
-    public string Phone { get; set; }
+    public string PhoneDepart { get; set; }
     public string ShortName { get; set; }
     public string Note { get; set; }
     public string BusinessUnit { get; set; }
