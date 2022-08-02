@@ -480,8 +480,8 @@ namespace sline.Integration.Server
         if (departmentStr.HeadOffice != null)
           entity.HeadOfficeExtIdhprom = departmentStr.HeadOffice;
 
-        if (departmentStr.Phone != null)
-          entity.Phone = departmentStr.Phone;
+        if (departmentStr.PhoneDepart != null)
+          entity.Phone = departmentStr.PhoneDepart;
 
         if (departmentStr.ShortName != null)
           entity.ShortName = departmentStr.ShortName;
@@ -510,7 +510,7 @@ namespace sline.Integration.Server
         departmentStr.IsSystem = entity.IsSystem;
         departmentStr.Manager = entity.ManagerExtIdhprom;
         departmentStr.HeadOffice = entity.HeadOfficeExtIdhprom;
-        departmentStr.Phone = entity.Phone;
+        departmentStr.PhoneDepart = entity.Phone;
         departmentStr.ShortName = entity.ShortName;
         departmentStr.Note = entity.Note;
         departmentStr.BusinessUnit = entity.BusinessUnitExtIdhprom;
@@ -1163,7 +1163,6 @@ namespace sline.Integration.Server
         order.DepartmentsAffectedPromhprom.AddNew().Department = order.Department;
         order.ESignhprom = true;
         order.PreparedBy = author;
-        order.sig
         
         using (MemoryStream stream = new MemoryStream())
         {
@@ -1216,7 +1215,7 @@ namespace sline.Integration.Server
             SendTrace($"ApprovalRule: {task.ApprovalRule.Name}");
           }
         }
-        task.Signatory = Employees.GetAll().Where(x => x.Id == docStr.Signatory).FirstOrDefault();
+        task.Signatory = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.Signatory).FirstOrDefault();
         task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
         //task.Save();
         try
@@ -1299,7 +1298,6 @@ namespace sline.Integration.Server
     
     public void SendException(string exMessage, string exStackTrace)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1319,11 +1317,9 @@ namespace sline.Integration.Server
       client.EnableSsl = true;
       client.Send(message);
       client.Dispose();
-
     }
     public void SendNotify(string mailTo, string msg)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1343,7 +1339,6 @@ namespace sline.Integration.Server
     }
     public void SendMessage(params string[] msgs)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1371,7 +1366,6 @@ namespace sline.Integration.Server
     }
     public void SendTrace(string msg)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1390,7 +1384,6 @@ namespace sline.Integration.Server
       client.EnableSsl = true;
       client.Send(message);
       client.Dispose();
-
     }
     
     #endregion

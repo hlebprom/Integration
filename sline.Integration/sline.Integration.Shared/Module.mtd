@@ -1201,7 +1201,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.4",
+  "Version": "0.0.1.5",
   "Widgets": [],
   "Versions": [
     {

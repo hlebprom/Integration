@@ -38,7 +38,7 @@
   "SharedAssemblyName": "sline.HlebpromIntegration.Shared",
   "SharedNamespace": "sline.HlebpromIntegration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.4",
+  "Version": "0.0.1.5",
   "Widgets": [],
   "Versions": [
     {
