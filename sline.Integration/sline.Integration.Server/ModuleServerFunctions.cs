@@ -374,7 +374,7 @@ namespace sline.Integration.Server
             entity.ActualAddresshprom = inputData.PostalAddress;
             isUpdateted = true;
           }
-        }        
+        }
         
         if (inputData.Email != null)
         {
@@ -1153,7 +1153,7 @@ namespace sline.Integration.Server
         order.Department = Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
         order.DocumentDate = Calendar.Now;
         order.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
-        Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
+        var date = Convert.ToDateTime(docStr.DocumentDate);//Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
         order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
           date.ToString("dd.MM.yyyy") + " на сотрудника - " + order.Assignee.DisplayValue;
         order.DisplayValue = order.Subject;
@@ -1233,7 +1233,7 @@ namespace sline.Integration.Server
       catch (Exception ex)
       {
         SendException(ex.Message, ex.StackTrace);
-        Logger.Error($" >>> SOFTLINE >>> TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
+        Logger.Error($" >>> SOFTLINE >>> CreateDocumentOrder >>> '{ex.Message}', {ex.StackTrace}");
         return false;
       }
 
@@ -1277,9 +1277,13 @@ namespace sline.Integration.Server
           message += string.Format("Не найден сотрудник EmployeeExtId: {0} \r\n", inputData.EmployeeExtId);
         }
         
-        if (!Calendar.TryParseDate(inputData.DocumentDate, out DateTime date))
+        try
         {
-          message += String.Format("Некорректная дата документа: {0} \r\n", inputData.DocumentDate);
+          var date = Convert.ToDateTime(inputData.DocumentDate);
+        }
+        catch
+        {
+          message += string.Format("Некорректная дата документа: {0} \r\n", inputData.DocumentDate);
         }
         return message;
       }
