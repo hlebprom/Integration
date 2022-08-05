@@ -1302,6 +1302,7 @@ namespace sline.Integration.Server
     
     public void SendException(string exMessage, string exStackTrace)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1324,6 +1325,7 @@ namespace sline.Integration.Server
     }
     public void SendNotify(string mailTo, string msg)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1343,6 +1345,7 @@ namespace sline.Integration.Server
     }
     public void SendMessage(params string[] msgs)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1370,6 +1373,7 @@ namespace sline.Integration.Server
     }
     public void SendTrace(string msg)
     {
+      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
