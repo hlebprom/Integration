@@ -81,6 +81,7 @@ namespace sline.Integration.Server
           person.FirstName = inputData.FirstName;
         if (inputData.MiddleName != null)
           person.MiddleName = inputData.MiddleName;
+        person.Name = person.LastName + " " + person.FirstName + " " + person.MiddleName;
         if (inputData.TIN != null)
           person.TIN = inputData.TIN;
         if (inputData.INILA != null)
@@ -794,6 +795,134 @@ namespace sline.Integration.Server
 
       return result;
     }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public Structures.Module.IContractStr HPContract(int id)
+    {
+      Structures.Module.IContractStr result = new Structures.Module.ContractStr();
+      
+      var contract = Contracts.GetAll().Where(x => x.Id == id).FirstOrDefault();
+      if(contract == null)
+      {
+        
+      }
+      else
+      {
+        try
+        {
+          var docDto = Structures.Module.ContractStr.Create();
+          docDto = CopyFromEntity(contract);
+          docDto.APIUpdatedhprom = false;
+          docDto.ActionWebApi = true;
+          //docDto = SaveEntity(docDto);
+          var entity = Contracts.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id));
+          
+          if (entity != null)
+          {
+            var docVersion = entity.LastVersion;
+            if (docVersion != null)
+            {
+              try
+              {
+                docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
+                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                {
+                  if (docVersion.PublicBody.Size > 0)
+                  {
+                    var str = docVersion.PublicBody.Read();
+                    str.CopyTo(ms);
+                  }
+                  else if (docVersion.Body.Size > 0)
+                  {
+                    var str = docVersion.Body.Read();
+                    str.CopyTo(ms);
+                  }
+                  docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
+                }
+              }
+              catch (Exception exc)
+              {
+                Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+              }
+            }
+          }
+          
+          result = docDto;
+        }
+        catch (Exception exc)
+        {
+          
+          
+        }
+      }
+      return result;
+    }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public Structures.Module.ISupAgreementStr HPSupAgreement(int id)
+    {
+      Structures.Module.ISupAgreementStr result = new Structures.Module.SupAgreementStr();
+      
+      var supagreement = SupAgreements.GetAll().Where(x => x.Id == id).FirstOrDefault();
+      if(supagreement == null)
+      {
+        
+      }
+      else
+      {
+        try
+        {
+          var docDto = Structures.Module.SupAgreementStr.Create();
+          docDto = CopyFromEntity(supagreement);
+          docDto.APIUpdatedhprom = false;
+          docDto.ActionWebApi = true;
+          docDto = SaveEntity(docDto);
+          
+          
+          var entity = SupAgreements.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id));
+          
+          if (entity != null)
+          {
+            var docVersion = entity.LastVersion;
+            if (docVersion != null)
+            {
+              try
+              {
+                docDto.LastVersionFileName = $"{entity.Id}.{entity.LastVersion.AssociatedApplication.Extension}";
+                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                {
+                  if (docVersion.PublicBody.Size > 0)
+                  {
+                    var str = docVersion.PublicBody.Read();
+                    str.CopyTo(ms);
+                  }
+                  else if (docVersion.Body.Size > 0)
+                  {
+                    var str = docVersion.Body.Read();
+                    str.CopyTo(ms);
+                  }
+                  docDto.LastVersionBody = Convert.ToBase64String(ms.ToArray());
+                }
+              }
+              catch (Exception exc)
+              {
+                Logger.Error($" >>> SOFTLINE >>> '{exc.Message}', {exc.StackTrace}");
+              }
+            }
+            
+          }
+          
+          result = docDto;
+        }
+        catch (Exception exc)
+        {
+          
+          
+        }
+      }
+      return result;
+    }
+    
     public Structures.Module.IContractStr CopyFromEntity(IContract entity)
     {
       var docDto = Structures.Module.ContractStr.Create();
@@ -1105,7 +1234,12 @@ namespace sline.Integration.Server
         if (document != null && document.HasVersions && employee != null)
         {
           // TODO RomanovSL вынужденная мера, т.к. задачу на ознакомление нельзя запускать от имени администратора
-          acqTask.Author = employee;
+          
+          // обычно при запросе автором система проставляет, пользовотеля инициатора запроса
+          //          var author = Employees.GetAll().Where(x => x.Id == 21488 || x.Name == "Интерфейс Обмена").FirstOrDefault();//Поиск вирт.сотр. Интерфейс Обмена
+          //          acqTask.Author = author;
+          
+
           acqTask.DocumentGroup.All.Add(document);
           acqTask.Performers.AddNew().Performer = employee;
           acqTask.Deadline = Calendar.Now.AddDays(10);
@@ -1149,10 +1283,11 @@ namespace sline.Integration.Server
         order.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
         var author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
         order.Author = author;
-        order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == docStr.BusinessUnit).FirstOrDefault();
+        //order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == docStr.BusinessUnit).FirstOrDefault();
         order.Department = Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
         order.DocumentDate = Calendar.Now;
         order.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+        order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.Id == order.Assignee.Department.BusinessUnit.Id).FirstOrDefault();
         var date = Convert.ToDateTime(docStr.DocumentDate);//Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
         order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
           date.ToString("dd.MM.yyyy") + " на сотрудника - " + order.Assignee.DisplayValue;
@@ -1221,6 +1356,25 @@ namespace sline.Integration.Server
         try
         {
           Sungero.Workflow.Functions.TaskRemoteFunctions.Start(task);
+          try
+          {
+            var acquaintanceTask = AcquaintanceTasks.Create();
+            var authorAcqTask = Employees.GetAll().Where(x => x.Id == 21488 || x.Name == "Интерфейс Обмена").FirstOrDefault();//Поиск вирт.сотр. Интерфейс Обмена
+            acquaintanceTask.Author = authorAcqTask;
+            acquaintanceTask.DocumentGroup.All.Add(order);
+            int Duration = 10;
+            DateTime Deadline = Sungero.Core.Calendar.AddWorkingDays(Calendar.Today, Duration);
+            acquaintanceTask.Deadline = Deadline;// DateTime.Now.AddDays(10);
+            acquaintanceTask.Performers.AddNew().Performer = order.Assignee;
+            acquaintanceTask.DisplayValue = "Ознакомьтесь с дкументом " + order.DisplayValue;
+            acquaintanceTask.Save();
+            Sungero.Workflow.Functions.TaskRemoteFunctions.Start(acquaintanceTask);
+          }
+          catch (Exception ex)
+          {
+            Logger.Error($" >>> SOFTLINE >>> StartAcquaintanceTask TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
+            SendTrace($"StartAcquaintanceTask TaskRemoteFunctions.Start() {ex.Message}\n{ex.StackTrace}");
+          }
         }
         catch (Exception ex)
         {
@@ -1296,13 +1450,197 @@ namespace sline.Integration.Server
 
     }
     
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IHPRegistryTaskDto CreateRegistryTask(Structures.Module.IHPRegistryTaskDto regTask)
+    {
+      try
+      {
+        var Task = hprom.DocExt.RegistryTasks.Create();
+        Task.Author = Users.GetAll().Where(x => x.Id == regTask.TaskInitiator).FirstOrDefault();
+        Task.TaskPerformer = Employees.GetAll().Where(x => x.Id == regTask.TaskPerformer).FirstOrDefault();
+        Task.TaskInitiator = Employees.GetAll().Where(x => x.Id == regTask.TaskInitiator).FirstOrDefault();
+        Task.Author = Task.TaskInitiator;
+        //        Calendar.TryParse(regTask.StartDate, out Calendar StartDate);
+        //        Calendar.TryParse(regTask.ExecutionDatePlan, out Calendar ExecutionDatePlan);
+        //        Calendar.TryParse(regTask.ExecutionDateFact, out Calendar ExecutionDateFact);
+        Task.Started = regTask.StartDate;
+        Task.CreateDate = regTask.StartDate;
+        Task.ExecutionDatePlan = regTask.ExecutionDatePlan;
+        Task.ExecutionDateFact = regTask.ExecutionDateFact;
+        Task.StartedBy = Task.Author;
+        Task.Subject = regTask.Subject;
+        Task.TextTask = regTask.TextTask;
+        Task.NumOfDefferals = regTask.NumOfDefferals;
+        Task.LateDefferal = regTask.LateDefferal;
+        switch (regTask.GroupTask)
+        {
+          case "Задачи с СД":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.TasksWithSD; //"Задачи с СД";
+            break;
+          case "Задачи ТОП-20":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.TasksTop20; //"Задачи ТОП-20";
+            break;
+          case "Ногинск 2–3 очередь":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.NGN; //"Ногинск 2–3 очередь";
+            break;
+          case "Коммерческая служба":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.CommerService; //"Коммерческая служба";
+            break;
+          case "Служба информационных технологий":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.ITService; //"Служба информационных технологий";
+            break;
+          case "Служба качества":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.QualityService; //"Служба качества";
+            break;
+          case "Отдел коммуникаций":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.ComunicDepart; //"Отдел коммуникаций";
+            break;
+          case "Служба логистики":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.LogisticService; //"Служба логистики";
+            break;
+          case "Служба охраны труда":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.LaborProtection; //"Служба охраны труда";
+            break;
+          case "Служба управления персоналом":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.UppService; //"Служба управления персоналом";
+            break;
+          case "Проектный офис":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.ProjectOffice; //"Проектный офис";
+            break;
+          case "Финансовая служба":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.FinancService; //"Финансовая служба";
+            break;
+          case "Юридическая служба":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.LegalService; //"Юридическая служба";
+            break;
+          case "Свежие торты":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.FreshCakes; //"Свежие торты";
+            break;
+          case "Удобные торты":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.ComfortCakes; //"Удобные торты";
+            break;
+          case "Здоровое питание":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.HealthyEating; //"Здоровое питание";
+            break;
+          case "Свежая выпечка":
+            Task.GroupTask = hprom.DocExt.RegistryTask.GroupTask.FreshBackGoods; //"Свежая выпечка";
+            break;
+        }
+
+        Sungero.Workflow.Functions.TaskRemoteFunctions.Start(Task);
+        
+        regTask.Id = Task.Id;
+        regTask.NumTask = Task.Id;
+        regTask.StartDate = Task.Started;
+        regTask.CreateDate = Task.CreateDate;
+        regTask.Subject = Task.Subject;
+        regTask.TextTask = Task.TextTask;
+        regTask.TaskPerformer = Task.TaskPerformer.Id;
+        regTask.ExecutionDatePlan = Task.ExecutionDatePlan;
+        regTask.ExecutionDateFact = Task.ExecutionDateFact;
+        regTask.NumOfDefferals = Task.NumOfDefferals;
+        regTask.LateDefferal = Task.LateDefferal;
+        regTask.Timing = Task.Timing;
+        regTask.DurationTask = Task.DurationTask;
+        regTask.DurationTaskFact = Task.DurationTaskFact;
+        regTask.GradeNumDefferals = Task.GradeNumDefferals;
+        regTask.GradeLateDefferals = Task.GradeLateDefferals;
+        regTask.GradeDuration = Task.GradeDuration;
+        regTask.TaskInitiator = Task.TaskInitiator.Id;
+        regTask.GradeTiming = Task.GradeTiming;
+        regTask.GroupTask = Enum.GetName(Task.GroupTask.GetType(), Task.GroupTask.Value);
+        regTask.CauseStopAssignment = Task.CauseStopAssignment;
+        regTask.ChangePerformer = Task.ChangePerformer.Name;
+        regTask.Status = Enum.GetName(Task.Status.GetType(), Task.Status.Value);
+        regTask.ActiveText = Task.ActiveText;
+        return regTask;
+      }
+      catch (Exception ex)
+      {
+        return regTask;
+      }
+
+    }
+    
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IHPRegistryTaskDto UpdateRegistryTask(Structures.Module.IHPRegistryTaskDto regTask)
+    {
+      try
+      {
+        var Task = hprom.DocExt.RegistryTasks.Get(regTask.Id);
+        switch (regTask.Status)
+        {
+          case "На исполнении":
+            Task.Status = Sungero.Workflow.AssignmentBase.Status.InProcess;
+            break;
+          case "Выполнена":
+            Task.Status = Sungero.Workflow.AssignmentBase.Status.Completed;
+            break;
+          case "Снята":
+            Task.Status = Sungero.Workflow.AssignmentBase.Status.Aborted;
+            break;
+        }
+        
+        var Assignment = Sungero.Workflow.Assignments.GetAll().Where(x => x.MainTask.Id == Task.Id).FirstOrDefault();
+        if (Assignment != null)
+        {
+          //if (ActiveText != null)
+          Assignment.ActiveText = regTask.ActiveText;
+          regTask.ActiveText = Assignment.ActiveText;
+          Sungero.Core.Enumeration Enumeration = Sungero.Workflow.AssignmentBase.Status.InProcess;
+          if (Task.Status == Sungero.Workflow.AssignmentBase.Status.InProcess)
+          {
+            Assignment.Status = Sungero.Workflow.AssignmentBase.Status.InProcess;
+          }
+          else if (Task.Status == Sungero.Workflow.AssignmentBase.Status.Aborted)
+          {
+            Assignment.Status = Sungero.Workflow.AssignmentBase.Status.Aborted;
+          }
+          else if (Task.Status == Sungero.Workflow.AssignmentBase.Status.Completed)
+          {
+            Assignment.Status = Sungero.Workflow.AssignmentBase.Status.Completed;
+          }
+          Assignment.Save();
+        }
+        Task.Save();
+        
+        regTask.Id = Task.Id;
+        regTask.NumTask = Task.Id;
+        regTask.StartDate = Task.Started;
+        regTask.CreateDate = Task.CreateDate;
+        regTask.Subject = Task.Subject;
+        regTask.TextTask = Task.TextTask;
+        regTask.TaskPerformer = Task.TaskPerformer.Id;
+        regTask.ExecutionDatePlan = Task.ExecutionDatePlan;
+        regTask.ExecutionDateFact = Task.ExecutionDateFact;
+        regTask.NumOfDefferals = Task.NumOfDefferals;
+        regTask.LateDefferal = Task.LateDefferal;
+        regTask.Timing = Task.Timing;
+        regTask.DurationTask = Task.DurationTask;
+        regTask.DurationTaskFact = Task.DurationTaskFact;
+        regTask.GradeNumDefferals = Task.GradeNumDefferals;
+        regTask.GradeLateDefferals = Task.GradeLateDefferals;
+        regTask.GradeDuration = Task.GradeDuration;
+        regTask.TaskInitiator = Task.TaskInitiator.Id;
+        regTask.GradeTiming = Task.GradeTiming;
+        regTask.GroupTask = Enum.GetName(Task.GroupTask.GetType(), Task.GroupTask.Value);
+        regTask.CauseStopAssignment = Task.CauseStopAssignment;
+        regTask.ChangePerformer = Task.ChangePerformer.Name;
+        regTask.Status = Enum.GetName(Task.Status.GetType(), Task.Status.Value);
+        return regTask;
+      }
+      catch (Exception ex)
+      {
+        return regTask;
+      }
+
+    }
     #endregion
     
     #region Отправка уведомлений в почту
     
     public void SendException(string exMessage, string exStackTrace)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1325,7 +1663,6 @@ namespace sline.Integration.Server
     }
     public void SendNotify(string mailTo, string msg)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1345,7 +1682,6 @@ namespace sline.Integration.Server
     }
     public void SendMessage(params string[] msgs)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";
@@ -1373,7 +1709,6 @@ namespace sline.Integration.Server
     }
     public void SendTrace(string msg)
     {
-      return;
       int SMTPPort = 587;
       string SMTPServer = "smtp.office365.com";
       string mailFrom = "directum-robot@hlebprom.com";

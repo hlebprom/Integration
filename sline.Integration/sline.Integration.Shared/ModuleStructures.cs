@@ -250,7 +250,34 @@ namespace sline.Integration.Structures.Module
     public string Status { get; set; }
   }
   
-  
-  
+  [Public]
+  partial class HPRegistryTaskDto
+  {
+    public int Id {get;set;}
+    public int? NumTask { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? CreateDate { get; set; }
+    public string Subject { get; set; }
+    public string TextTask { get; set; }
+    public int TaskPerformer { get; set; }
+    public DateTime? ExecutionDatePlan { get; set; }
+    public DateTime? ExecutionDateFact { get; set; }
+    public int? NumOfDefferals { get; set; }
+    public bool? LateDefferal { get; set; }
+    public bool? Timing { get; set; }
+    public int? DurationTask { get; set; }
+    public int? DurationTaskFact { get; set; }
+    public string GradeNumDefferals { get; set; }
+    public string GradeLateDefferals { get; set; }
+    public string GradeDuration { get; set; }
+    public int TaskInitiator { get; set; }
+    public string GradeTiming { get; set; }
+    public string GroupTask { get; set; }
+    public string CauseStopAssignment { get; set; }
+    public string ChangePerformer { get; set; }
+    public string Status { get; set; }
+    public string ActiveText { get; set; }
+  }
+
   
 }
