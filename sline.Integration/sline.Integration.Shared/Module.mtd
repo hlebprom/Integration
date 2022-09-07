@@ -73,19 +73,6 @@
       "WebApiRequestType": "Post"
     },
     {
-      "Name": "CreateRegistryTask",
-      "Parameters": [
-        {
-          "Name": "regTask",
-          "ParameterType": "global::sline.Integration.Structures.Module.IHPRegistryTaskDto",
-          "ParameterTypeFullName": "sline.Integration.Structures.Module.IHPRegistryTaskDto"
-        }
-      ],
-      "ReturnType": "global::sline.Integration.Structures.Module.IHPRegistryTaskDto",
-      "ReturnTypeFullName": "sline.Integration.Structures.Module.IHPRegistryTaskDto",
-      "WebApiRequestType": "Post"
-    },
-    {
       "Name": "GetCompany",
       "Parameters": [
         {
@@ -122,32 +109,6 @@
       ],
       "ReturnType": "global::System.Collections.Generic.List<global::sline.Integration.Structures.Module.ISupAgreementStr>",
       "ReturnTypeFullName": "System.Collections.Generic.List",
-      "WebApiRequestType": "Get"
-    },
-    {
-      "Name": "HPContract",
-      "Parameters": [
-        {
-          "Name": "id",
-          "ParameterType": "global::System.Int32",
-          "ParameterTypeFullName": "System.Int32"
-        }
-      ],
-      "ReturnType": "global::sline.Integration.Structures.Module.IContractStr",
-      "ReturnTypeFullName": "sline.Integration.Structures.Module.IContractStr",
-      "WebApiRequestType": "Get"
-    },
-    {
-      "Name": "HPSupAgreement",
-      "Parameters": [
-        {
-          "Name": "id",
-          "ParameterType": "global::System.Int32",
-          "ParameterTypeFullName": "System.Int32"
-        }
-      ],
-      "ReturnType": "global::sline.Integration.Structures.Module.ISupAgreementStr",
-      "ReturnTypeFullName": "sline.Integration.Structures.Module.ISupAgreementStr",
       "WebApiRequestType": "Get"
     },
     {
@@ -239,19 +200,6 @@
       ],
       "ReturnType": "global::sline.Integration.Structures.Module.ILoginStr",
       "ReturnTypeFullName": "sline.Integration.Structures.Module.ILoginStr",
-      "WebApiRequestType": "Post"
-    },
-    {
-      "Name": "UpdateRegistryTask",
-      "Parameters": [
-        {
-          "Name": "regTask",
-          "ParameterType": "global::sline.Integration.Structures.Module.IHPRegistryTaskDto",
-          "ParameterTypeFullName": "sline.Integration.Structures.Module.IHPRegistryTaskDto"
-        }
-      ],
-      "ReturnType": "global::sline.Integration.Structures.Module.IHPRegistryTaskDto",
-      "ReturnTypeFullName": "sline.Integration.Structures.Module.IHPRegistryTaskDto",
       "WebApiRequestType": "Post"
     }
   ],
@@ -1032,130 +980,6 @@
       "StructureNamespace": "sline.Integration.Structures.Module"
     },
     {
-      "Name": "HPRegistryTaskDto",
-      "IsPublic": true,
-      "Properties": [
-        {
-          "Name": "Id",
-          "TypeFullName": "global::System.Int32"
-        },
-        {
-          "Name": "NumTask",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Int32>"
-        },
-        {
-          "Name": "StartDate",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
-        },
-        {
-          "Name": "CreateDate",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
-        },
-        {
-          "Name": "Subject",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "TextTask",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "TaskPerformer",
-          "TypeFullName": "global::System.Int32"
-        },
-        {
-          "Name": "ExecutionDatePlan",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
-        },
-        {
-          "Name": "ExecutionDateFact",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.DateTime>"
-        },
-        {
-          "Name": "NumOfDefferals",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Int32>"
-        },
-        {
-          "Name": "LateDefferal",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
-        },
-        {
-          "Name": "Timing",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
-        },
-        {
-          "Name": "DurationTask",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Int32>"
-        },
-        {
-          "Name": "DurationTaskFact",
-          "IsNullable": true,
-          "TypeFullName": "global::System.Nullable<global::System.Int32>"
-        },
-        {
-          "Name": "GradeNumDefferals",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "GradeLateDefferals",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "GradeDuration",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "TaskInitiator",
-          "TypeFullName": "global::System.Int32"
-        },
-        {
-          "Name": "GradeTiming",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "GroupTask",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "CauseStopAssignment",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "ChangePerformer",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "Status",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        },
-        {
-          "Name": "ActiveText",
-          "IsNullable": true,
-          "TypeFullName": "global::System.String"
-        }
-      ],
-      "StructureNamespace": "sline.Integration.Structures.Module"
-    },
-    {
       "Name": "JobTitleStr",
       "IsPublic": true,
       "Properties": [
@@ -1377,7 +1201,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.9",
+  "Version": "0.0.1.5",
   "Widgets": [],
   "Versions": [
     {
