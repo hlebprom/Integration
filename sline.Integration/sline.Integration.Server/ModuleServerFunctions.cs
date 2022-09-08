@@ -1451,7 +1451,7 @@ namespace sline.Integration.Server
     }
     
     [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IHPRegistryTaskDto CreateRegistryTask(Structures.Module.IHPRegistryTaskDto regTask)
+    public Structures.Module.IHPRegistryTaskStr CreateRegistryTask(Structures.Module.IHPRegistryTaskStr regTask)
     {
       try
       {
@@ -1563,7 +1563,7 @@ namespace sline.Integration.Server
     }
     
     [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IHPRegistryTaskDto UpdateRegistryTask(Structures.Module.IHPRegistryTaskDto regTask)
+    public Structures.Module.IHPRegistryTaskStr UpdateRegistryTask(Structures.Module.IHPRegistryTaskStr regTask)
     {
       try
       {

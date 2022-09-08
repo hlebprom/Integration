@@ -251,7 +251,7 @@ namespace sline.Integration.Structures.Module
   }
   
   [Public]
-  partial class HPRegistryTaskDto
+  partial class HPRegistryTaskStr
   {
     public int Id {get;set;}
     public int? NumTask { get; set; }
