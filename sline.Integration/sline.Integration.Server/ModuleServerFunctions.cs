@@ -876,7 +876,7 @@ namespace sline.Integration.Server
           docDto = CopyFromEntity(supagreement);
           docDto.APIUpdatedhprom = false;
           docDto.ActionWebApi = true;
-          docDto = SaveEntity(docDto);
+          //docDto = SaveEntity(docDto);
           
           
           var entity = SupAgreements.GetAll().FirstOrDefault(x => Equals(x.Id, docDto.Id));
@@ -1140,7 +1140,12 @@ namespace sline.Integration.Server
     
     public string GetContractStatus(int idDoc)
     {
-      var allTask = ApprovalTasks.GetAll().Where(x => x.DisplayValue.Contains($"ИД {idDoc}"));
+      var document = Sungero.Docflow.OfficialDocuments.Get(idDoc);
+      var allTask = ApprovalTasks.GetAll()
+                                .Where(t => t.AttachmentDetails
+                                .Any(a => a.AttachmentId == idDoc))
+                                .OrderBy(t => t.Created)
+                                .ToList();
       int id = 0;
       var mainTask = ApprovalTasks.Null;
       foreach (var item in allTask)
@@ -1161,7 +1166,7 @@ namespace sline.Integration.Server
         bool checkApprovalStatus = true;
         var allAssignments = Sungero.Workflow.Assignments.GetAll().Where(x => Equals(x.MainTask.Id, mainTask.Id));
         foreach (var assign in allAssignments)
-        {
+        {          
           bool likeApprAs = ApprovalAssignments.Is(assign);
           bool likeManApprAs = ApprovalManagerAssignments.Is(assign);
 
