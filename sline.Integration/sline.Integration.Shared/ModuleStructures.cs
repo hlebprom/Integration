@@ -279,5 +279,15 @@ namespace sline.Integration.Structures.Module
     public string ActiveText { get; set; }
   }
 
+  [Public]
+  partial class OrderStr
+  {
+    public int Id { get; set;}
+    public string Name {get; set;}
+    public bool? LastVersionApproved {get;set;}
+    public string InternalApprovalState {get;set;}
+    public string ExtId {get; set;}
+
+  }
   
 }

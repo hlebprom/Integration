@@ -45,6 +45,13 @@
   "Importance": "Medium",
   "InterfaceAssemblyName": "Sungero.Domain.Interfaces",
   "InterfaceNamespace": "sline.Integration",
+  "Libraries": [
+    {
+      "NameGuid": "4e449bb2-a5b5-4fe3-8fe3-7e7748d0dae0",
+      "Name": "SqlClient",
+      "Scope": "Both"
+    }
+  ],
   "PublicFunctions": [
     {
       "Name": "CreateAcquaintanceTask",
@@ -68,8 +75,8 @@
           "ParameterTypeFullName": "sline.Integration.Structures.Module.IDocumentOrderStr"
         }
       ],
-      "ReturnType": "global::System.Nullable<global::System.Boolean>",
-      "ReturnTypeFullName": "System.Nullable",
+      "ReturnType": "global::sline.Integration.Structures.Module.IDocumentOrderStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IDocumentOrderStr",
       "WebApiRequestType": "Post"
     },
     {
@@ -135,6 +142,19 @@
       ],
       "ReturnType": "global::sline.Integration.Structures.Module.IContractStr",
       "ReturnTypeFullName": "sline.Integration.Structures.Module.IContractStr",
+      "WebApiRequestType": "Get"
+    },
+    {
+      "Name": "HPOrder",
+      "Parameters": [
+        {
+          "Name": "extId",
+          "ParameterType": "global::System.String",
+          "ParameterTypeFullName": "System.String"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IOrderStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IOrderStr",
       "WebApiRequestType": "Get"
     },
     {
@@ -1218,6 +1238,37 @@
       "StructureNamespace": "sline.Integration.Structures.Module"
     },
     {
+      "Name": "OrderStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "Name",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "LastVersionApproved",
+          "IsNullable": true,
+          "TypeFullName": "global::System.Nullable<global::System.Boolean>"
+        },
+        {
+          "Name": "InternalApprovalState",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "ExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
       "Name": "SupAgreementStr",
       "IsPublic": true,
       "Properties": [
@@ -1377,7 +1428,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.9",
+  "Version": "0.0.1.10",
   "Widgets": [],
   "Versions": [
     {
