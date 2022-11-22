@@ -745,6 +745,11 @@
           "Name": "Status",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "BusinessUnitINN",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
         }
       ],
       "StructureNamespace": "sline.Integration.Structures.Module"
@@ -901,6 +906,11 @@
         {
           "Name": "Trace",
           "TypeFullName": "global::System.Boolean"
+        },
+        {
+          "Name": "InitiatorExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
         }
       ],
       "StructureNamespace": "sline.Integration.Structures.Module"
@@ -1428,7 +1438,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.10",
+  "Version": "0.0.1.16",
   "Widgets": [],
   "Versions": [
     {

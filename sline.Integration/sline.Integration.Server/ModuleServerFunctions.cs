@@ -81,7 +81,7 @@ namespace sline.Integration.Server
           person.FirstName = inputData.FirstName;
         if (inputData.MiddleName != null)
           person.MiddleName = inputData.MiddleName;
-        person.Name = person.LastName + " " + person.FirstName + " " + person.MiddleName;
+        //person.Name = person.LastName + " " + person.FirstName + " " + person.MiddleName;
         if (inputData.TIN != null)
           person.TIN = inputData.TIN;
         if (inputData.INILA != null)
@@ -109,6 +109,7 @@ namespace sline.Integration.Server
           entity.Login = null;
           person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
         }
+        person.ExtIdhprom = inputData.Person;
         person.Save();
         entity.Person = person;
         
@@ -132,7 +133,7 @@ namespace sline.Integration.Server
         entity.LegalAddresshprom = inputData.LegalAddress;
         entity.ActualAddresshprom = inputData.PostalAddress;
         entity.FuncManagerExtIdhprom = inputData.FunctionalManager;
-        entity.Name = entity.Person.Name;
+        //entity.Name = entity.Person.Name;
         entity.EmployeeNumberhprom = inputData.EmployeeNumber;
         entity.Save();
         
@@ -970,6 +971,7 @@ namespace sline.Integration.Server
       docDto.Status = GetContractStatus(docDto.Id);
       docDto.APIUpdatedhprom = false;
       docDto.ActionWebApi = true;
+      docDto.BusinessUnitINN = entity.BusinessUnit.TIN;
       
       return docDto;
     }
@@ -1191,7 +1193,7 @@ namespace sline.Integration.Server
       
       return entityDto;
     }
-       
+    
     [Public(WebApiRequestType = RequestType.Get)]
     public Structures.Module.IOrderStr HPOrder(string extId)
     {
@@ -1455,23 +1457,23 @@ namespace sline.Integration.Server
           var order = Orders.Create();
           order.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
           var author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
-          order.Author = author;
+          var initiator = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.InitiatorExtId).FirstOrDefault();
+          order.Author = initiator;
+          order.PreparedBy = initiator;
           order.ExtIdhprom = docStr.DocumentId;
-          //order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == docStr.BusinessUnit).FirstOrDefault();
-          order.Department = author.Department;//Departments.GetAll().Where(x => Equals(x.Id, author.Department.Id)).FirstOrDefault();
+          order.Department = author.Department;
           order.DocumentDate = Calendar.Now;
-          order.BusinessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == docStr.BusinessUnit).FirstOrDefault();
-          var date = Convert.ToDateTime(docStr.DocumentDate);//Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
+          order.BusinessUnit = author.Department.BusinessUnit;
+          var date = Convert.ToDateTime(docStr.DocumentDate);
           order.Subject = "ИД " + order.Id + " , " + order.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
             date.ToString("dd.MM.yyyy");
           order.DisplayValue = order.Subject;
           order.Signatoryhprom = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.Signatory).FirstOrDefault();
-          order.Responsiblehprom = author.Name;
-          order.Responsibleshprom.AddNew().ResponsibleProperty = author;
+          order.Responsiblehprom = initiator.Name;
+          order.Responsibleshprom.AddNew().ResponsibleProperty = initiator;
           order.OneTimeDochprom = true;
           order.DepartmentsAffectedPromhprom.AddNew().Department = order.Department;
           order.ESignhprom = true;
-          order.PreparedBy = author;
           
           using (MemoryStream stream = new MemoryStream())
           {
@@ -1501,7 +1503,7 @@ namespace sline.Integration.Server
             throw new Exception(message);
           }
           task.Signatory = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.Signatory).FirstOrDefault();
-          task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+          task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
           
           try
           {
@@ -1597,15 +1599,18 @@ namespace sline.Integration.Server
         {
           message += string.Format("Не найден вид документа DocumentKind: {0} \r\n", inputData.DocumentKind);
         }
+        if (inputData.InitiatorExtId != null)
+        {
+          var initator = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.InitiatorExtId).FirstOrDefault();
+          if (initator == null)
+          {
+            message += string.Format("Не найден автор документа InitiatorExtId: {0} \r\n", inputData.InitiatorExtId);
+          }
+        }
         var author = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.AuthorExtId).FirstOrDefault();
         if (author == null)
         {
           message += string.Format("Не найден автор документа AuthorExtId: {0} \r\n", inputData.AuthorExtId);
-        }
-        var businessUnit = BusinessUnits.GetAll().Where(x => x.ExtIdhprom == inputData.BusinessUnit).FirstOrDefault();
-        if (businessUnit == null)
-        {
-          message += string.Format("Не найден BusinessUnit: {0} \r\n", inputData.BusinessUnit);
         }
         
         try
@@ -1650,6 +1655,12 @@ namespace sline.Integration.Server
         Task.TextTask = regTask.TextTask;
         Task.NumOfDefferals = regTask.NumOfDefferals;
         Task.LateDefferal = regTask.LateDefferal;
+        
+        Task.GradeDuration = regTask.GradeDuration;
+        Task.GradeLateDefferals = regTask.GradeLateDefferals;
+        Task.GradeNumDefferals = regTask.GradeNumDefferals;
+        Task.GradeTiming = regTask.GradeTiming;
+        
         switch (regTask.GroupTask)
         {
           case "Задачи с СД":
@@ -1746,6 +1757,17 @@ namespace sline.Integration.Server
       try
       {
         var Task = hprom.DocExt.RegistryTasks.Get(regTask.Id);
+        
+        Task.GradeDuration = regTask.GradeDuration;
+        Task.GradeLateDefferals = regTask.GradeLateDefferals;
+        Task.GradeNumDefferals = regTask.GradeNumDefferals;
+        Task.GradeTiming = regTask.GradeTiming;
+        
+        Task.Started = regTask.StartDate;
+        Task.CreateDate = regTask.StartDate;
+        Task.ExecutionDatePlan = regTask.ExecutionDatePlan;
+        Task.ExecutionDateFact = regTask.ExecutionDateFact;
+        
         switch (regTask.Status)
         {
           case "На исполнении":

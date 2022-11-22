@@ -152,6 +152,7 @@ namespace sline.Integration.Structures.Module
     public bool? APIUpdatedhprom { get; set; }
     public bool? ActionWebApi { get; set; }
     public string Status { get; set; }
+    public string BusinessUnitINN { get; set; }
   }
 
   [Public]
@@ -172,6 +173,7 @@ namespace sline.Integration.Structures.Module
     public string LastVersionBody { get; set; }
     public string ApprovalRule { get; set; }
     public bool Trace { get; set; }
+    public string InitiatorExtId { get; set; }
   }
   
   [Public]
