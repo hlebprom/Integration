@@ -45,13 +45,6 @@
   "Importance": "Medium",
   "InterfaceAssemblyName": "Sungero.Domain.Interfaces",
   "InterfaceNamespace": "sline.Integration",
-  "Libraries": [
-    {
-      "NameGuid": "4e449bb2-a5b5-4fe3-8fe3-7e7748d0dae0",
-      "Name": "SqlClient",
-      "Scope": "Both"
-    }
-  ],
   "PublicFunctions": [
     {
       "Name": "CreateAcquaintanceTask",
@@ -77,6 +70,19 @@
       ],
       "ReturnType": "global::sline.Integration.Structures.Module.IDocumentOrderStr",
       "ReturnTypeFullName": "sline.Integration.Structures.Module.IDocumentOrderStr",
+      "WebApiRequestType": "Post"
+    },
+    {
+      "Name": "CreateExtensionReport",
+      "Parameters": [
+        {
+          "Name": "docStr",
+          "ParameterType": "global::sline.Integration.Structures.Module.IExtensionReportStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IExtensionReportStr"
+        }
+      ],
+      "ReturnType": "global::sline.Integration.Structures.Module.IExtensionReportStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IExtensionReportStr",
       "WebApiRequestType": "Post"
     },
     {
@@ -1055,6 +1061,81 @@
         },
         {
           "Name": "EmployeeNumber",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        }
+      ],
+      "StructureNamespace": "sline.Integration.Structures.Module"
+    },
+    {
+      "Name": "ExtensionReportStr",
+      "IsPublic": true,
+      "Properties": [
+        {
+          "Name": "Id",
+          "TypeFullName": "global::System.Int32"
+        },
+        {
+          "Name": "DocumentId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "DocumentKind",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "LeadingDocumentId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "DocumentDate",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "DocumentNumber",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "AuthorExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "BusinessUnit",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Department",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "EmployeeExtId",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "DocExt",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "LastVersionBody",
+          "IsNullable": true,
+          "TypeFullName": "global::System.String"
+        },
+        {
+          "Name": "Trace",
+          "TypeFullName": "global::System.Boolean"
+        },
+        {
+          "Name": "InitiatorExtId",
           "IsNullable": true,
           "TypeFullName": "global::System.String"
         }

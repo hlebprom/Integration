@@ -932,7 +932,15 @@ namespace sline.Integration.Server
       docDto.DocumentKind = entity.DocumentKind?.Name;
       
       var bu = BusinessUnits.As(entity.BusinessUnit);
-      docDto.BusinessUnit = bu?.ExtIdhprom;
+      if(bu.TIN != null)
+        docDto.BusinessUnit = bu.TIN;
+      else if (bu.HeadCompany != null)
+        {
+          docDto.BusinessUnit = bu.HeadCompany.TIN;
+        }
+      else
+        docDto.BusinessUnit = "";
+      //docDto.BusinessUnit = bu?.ExtIdhprom;
       docDto.Subject = entity.Subject;
       docDto.Note = entity.Note;
       
@@ -1064,7 +1072,15 @@ namespace sline.Integration.Server
 
       docDto.LeadingDocument = entity.LeadingDocument?.Id;
       var bu = BusinessUnits.As(entity.BusinessUnit);
-      docDto.BusinessUnit = bu?.ExtIdhprom;
+      if(bu.TIN != null)
+        docDto.BusinessUnit = bu.TIN;
+      else if (bu.HeadCompany != null)
+        {
+          docDto.BusinessUnit = bu.HeadCompany.TIN;
+        }
+      else
+        docDto.BusinessUnit = "";
+      //docDto.BusinessUnit = bu?.ExtIdhprom;
       docDto.Subject = entity.Subject;
       docDto.Note = entity.Note;
       var ourSign = Employees.As(entity.OurSignatory);
@@ -1836,6 +1852,169 @@ namespace sline.Integration.Server
 
     }
     
+    [Public(WebApiRequestType = RequestType.Post)]
+    public Structures.Module.IExtensionReportStr CreateExtensionReport(Structures.Module.IExtensionReportStr docStr)
+    {
+      var entityDto = Structures.Module.ExtensionReportStr.Create();
+      string message = string.Empty;
+      
+      message = CheckExtensionReport(docStr);
+      if (!string.IsNullOrEmpty(message))
+      {
+        Logger.Error($" >>> SOFTLINE >>> {message}");
+        throw new Exception(message);
+      }
+      if(docStr.Id == 0)
+      {
+        try
+        {
+          var extensionReport = DirRX.ExpenseReports.ExpenseReports.Create();
+          extensionReport.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
+          var author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
+          extensionReport.Author = author;
+          extensionReport.Department = author.Department;
+          extensionReport.DocumentDate = Calendar.Now;
+          extensionReport.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+          extensionReport.BusinessUnit = extensionReport.Assignee.Department.BusinessUnit;//; BusinessUnits.GetAll().Where(x => x.Id == extensionReport.Assignee.Department.BusinessUnit.Id).FirstOrDefault();
+          var date = Convert.ToDateTime(docStr.DocumentDate);//Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
+          extensionReport.Subject = "ИД " + extensionReport.Id + " , " + extensionReport.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
+            date.ToString("dd.MM.yyyy") + " на сотрудника - " + extensionReport.Assignee.DisplayValue;
+          extensionReport.DisplayValue = extensionReport.Subject;
+          extensionReport.PreparedBy = author;
+          
+          var espense = extensionReport.Expenses.AddNew();
+          espense.ExpenseDescription = "Командировка/Служебная поездка";
+          espense.ExpenseDate = date;
+          extensionReport.DocsCount = 0;
+          extensionReport.Employee = extensionReport.Assignee;
+          extensionReport.GettedMoney = 0;
+          extensionReport.PagesCount = 0;
+          extensionReport.Purpose = "Командировка/Служебная поездка";
+          extensionReport.RemainMoney = 0;
+          
+          using (MemoryStream stream = new MemoryStream())
+          {
+            var app = Sungero.Content.AssociatedApplications.GetAll().Where(x => x.Extension == docStr.DocExt).FirstOrDefault();
+            byte[] data = Convert.FromBase64String(docStr.LastVersionBody);
+            stream.Write(data, 0, data.Length);
+            extensionReport.CreateVersion();
+            extensionReport.LastVersion.AssociatedApplication = app;
+            extensionReport.LastVersion.Body.Write(stream);
+          }
+          extensionReport.Save();
+          docStr.Id = extensionReport.Id;
+          
+          var leadingDoc = Sungero.Docflow.OfficialDocuments.GetAll().Where(x => Equals(x.Id.ToString(), docStr.LeadingDocumentId)).FirstOrDefault();
+          if (leadingDoc == null)
+          {
+            message = string.Format("Ведущий документ ИД {0} для приказа {1} ИД {2} не найден", docStr.LeadingDocumentId, docStr.DocumentKind, extensionReport.Id);
+            Logger.Debug($" >>> SOFTLINE >>> {message}");
+            SendNotify(author.Email, message);
+          }
+          else
+          {
+            leadingDoc.Relations.Add("Basis", extensionReport);
+            leadingDoc.Save();
+          }
+        }
+        catch (Exception ex)
+        {
+          Logger.Error($" >>> SOFTLINE >>> CreateDocumentOrder1 Order.Save()'{ex.Message}', {ex.StackTrace}");
+          SendTrace($"CreateDocumentOrder1 Order.Save() {ex.Message}\n{ex.StackTrace}");
+          throw new Exception(ex.Message);
+        }
+      }
+      else
+      {
+        var doc = DirRX.ExpenseReports.ExpenseReports.Get(docStr.Id);
+        
+        try
+        {
+          var acquaintanceTask = AcquaintanceTasks.Create();
+          var authorAcqTask = Employees.GetAll().Where(x => x.Id == 21488 || x.Name == "Интерфейс Обмена").FirstOrDefault();//Поиск вирт.сотр. Интерфейс Обмена
+          acquaintanceTask.Author = authorAcqTask;
+          acquaintanceTask.DocumentGroup.All.Add(doc);
+          int Duration = 10;
+          DateTime Deadline = Sungero.Core.Calendar.AddWorkingDays(Calendar.Today, Duration);
+          acquaintanceTask.Deadline = Deadline;// DateTime.Now.AddDays(10);
+          acquaintanceTask.Performers.AddNew().Performer = doc.Assignee;
+          acquaintanceTask.DisplayValue = "Ознакомьтесь с дкументом " + doc.DisplayValue;
+          acquaintanceTask.Save();
+          acquaintanceTask.Start();
+        }
+        catch (Exception ex)
+        {
+          Logger.Error($" >>> SOFTLINE >>> StartAcquaintanceTask TaskRemoteFunctions.Start() '{ex.Message}', {ex.StackTrace}");
+          SendTrace($"StartAcquaintanceTask TaskRemoteFunctions.Start() {ex.Message}\n{ex.StackTrace}");
+          throw new Exception(ex.Message);
+        }
+        
+        
+        var task = Sungero.Docflow.PublicFunctions.Module.Remote.CreateApprovalTask(doc);
+        if (docStr.Trace)
+        {
+          SendTrace($"Task: {task.Id}");
+          Logger.Debug($" >>> SOFTLINE >>> Task: {task.Id}");
+        }
+        if (task == null)
+        {
+          message = "(ApprovalTask == null)";
+          Logger.Error($" >>> SOFTLINE >>> {message}");
+          SendException("Id Order = "+doc.Id + ", MSG:" + message,"Не создалась задача");
+          throw new Exception(message);
+        }
+        task.Author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+        try
+        {
+          task.Start();
+        }
+        catch (Exception ex)
+        {
+          throw new Exception(ex.Message);
+        }
+      }
+      
+      return docStr;
+    }
+    
+    public string CheckExtensionReport(Structures.Module.IExtensionReportStr inputData)
+    {
+      string message = string.Empty;
+      try
+      {
+        var DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == inputData.DocumentKind).FirstOrDefault();
+        if (DocumentKind == null)
+        {
+          message += string.Format("Не найден вид документа DocumentKind: {0} \r\n", inputData.DocumentKind);
+        }
+        var author = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.AuthorExtId).FirstOrDefault();
+        if (author == null)
+        {
+          message += string.Format("Не найден автор документа AuthorExtId: {0} \r\n", inputData.AuthorExtId);
+        }
+        var assignee = Employees.GetAll().Where(x => x.ExtIdhprom == inputData.EmployeeExtId).FirstOrDefault();
+        if (assignee == null)
+        {
+          message += string.Format("Не найден сотрудник EmployeeExtId: {0} \r\n", inputData.EmployeeExtId);
+        }
+        
+        try
+        {
+          var date = Convert.ToDateTime(inputData.DocumentDate);
+        }
+        catch
+        {
+          message += string.Format("Некорректная дата документа: {0} \r\n", inputData.DocumentDate);
+        }
+        return message;
+      }
+      catch (Exception ex)
+      {
+        message = ex.Message;
+        SendException(ex.Message, ex.StackTrace);
+        return ex.Message;
+      }
+    }
     #endregion
 
     #region Отправка уведомлений в почту

@@ -292,4 +292,23 @@ namespace sline.Integration.Structures.Module
 
   }
   
+  [Public]
+  partial class ExtensionReportStr
+  {
+    public int Id { get; set; }
+    public string DocumentId { get; set; }
+    public string DocumentKind { get; set; }
+    public string LeadingDocumentId { get; set; }
+    public string DocumentDate { get; set; }
+    public string DocumentNumber { get; set; }
+    public string AuthorExtId { get; set; }
+    public string BusinessUnit { get; set; }
+    public string Department { get; set; }
+    public string EmployeeExtId { get; set; }
+    public string DocExt { get; set; }
+    public string LastVersionBody { get; set; }
+    public bool Trace { get; set; }
+    public string InitiatorExtId { get; set; }
+  }
+  
 }
