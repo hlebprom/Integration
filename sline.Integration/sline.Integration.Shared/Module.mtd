@@ -73,16 +73,16 @@
       "WebApiRequestType": "Post"
     },
     {
-      "Name": "CreateExtensionReport",
+      "Name": "CreateExpensesReport",
       "Parameters": [
         {
           "Name": "docStr",
-          "ParameterType": "global::sline.Integration.Structures.Module.IExtensionReportStr",
-          "ParameterTypeFullName": "sline.Integration.Structures.Module.IExtensionReportStr"
+          "ParameterType": "global::sline.Integration.Structures.Module.IExpenseReportStr",
+          "ParameterTypeFullName": "sline.Integration.Structures.Module.IExpenseReportStr"
         }
       ],
-      "ReturnType": "global::sline.Integration.Structures.Module.IExtensionReportStr",
-      "ReturnTypeFullName": "sline.Integration.Structures.Module.IExtensionReportStr",
+      "ReturnType": "global::sline.Integration.Structures.Module.IExpenseReportStr",
+      "ReturnTypeFullName": "sline.Integration.Structures.Module.IExpenseReportStr",
       "WebApiRequestType": "Post"
     },
     {
@@ -1068,7 +1068,7 @@
       "StructureNamespace": "sline.Integration.Structures.Module"
     },
     {
-      "Name": "ExtensionReportStr",
+      "Name": "ExpenseReportStr",
       "IsPublic": true,
       "Properties": [
         {
@@ -1519,7 +1519,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.16",
+  "Version": "0.0.1.18",
   "Widgets": [],
   "Versions": [
     {

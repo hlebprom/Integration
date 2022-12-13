@@ -293,7 +293,7 @@ namespace sline.Integration.Structures.Module
   }
   
   [Public]
-  partial class ExtensionReportStr
+  partial class ExpenseReportStr
   {
     public int Id { get; set; }
     public string DocumentId { get; set; }

@@ -386,22 +386,22 @@ namespace sline.Integration.Server
             isUpdateted = true;
           }
         }
-        if (inputData.NeedNotifyExpiredAssignments != null)
-        {
-          if (entity.NeedNotifyExpiredAssignments != inputData.NeedNotifyExpiredAssignments)
-          {
-            entity.NeedNotifyExpiredAssignments = inputData.NeedNotifyExpiredAssignments;
-            isUpdateted = true;
-          }
-        }
-        if (inputData.NeedNotifyNewAssignments != null)
-        {
-          if (entity.NeedNotifyNewAssignments != inputData.NeedNotifyNewAssignments)
-          {
-            entity.NeedNotifyNewAssignments = inputData.NeedNotifyNewAssignments;
-            isUpdateted = true;
-          }
-        }
+//        if (inputData.NeedNotifyExpiredAssignments != null)
+//        {
+//          if (entity.NeedNotifyExpiredAssignments != inputData.NeedNotifyExpiredAssignments)
+//          {
+//            entity.NeedNotifyExpiredAssignments = inputData.NeedNotifyExpiredAssignments;
+//            isUpdateted = true;
+//          }
+//        }
+//        if (inputData.NeedNotifyNewAssignments != null)
+//        {
+//          if (entity.NeedNotifyNewAssignments != inputData.NeedNotifyNewAssignments)
+//          {
+//            entity.NeedNotifyNewAssignments = inputData.NeedNotifyNewAssignments;
+//            isUpdateted = true;
+//          }
+//        }
         if (entity.AdmManagerExtIdhprom != inputData.AdministrativeManager)
         {
           entity.AdmManagerExtIdhprom = inputData.AdministrativeManager;
@@ -1853,12 +1853,12 @@ namespace sline.Integration.Server
     }
     
     [Public(WebApiRequestType = RequestType.Post)]
-    public Structures.Module.IExtensionReportStr CreateExtensionReport(Structures.Module.IExtensionReportStr docStr)
+    public Structures.Module.IExpenseReportStr CreateExpensesReport(Structures.Module.IExpenseReportStr docStr)
     {
-      var entityDto = Structures.Module.ExtensionReportStr.Create();
+      var entityDto = Structures.Module.ExpenseReportStr.Create();
       string message = string.Empty;
       
-      message = CheckExtensionReport(docStr);
+      message = CheckExpenseReport(docStr);
       if (!string.IsNullOrEmpty(message))
       {
         Logger.Error($" >>> SOFTLINE >>> {message}");
@@ -1868,52 +1868,52 @@ namespace sline.Integration.Server
       {
         try
         {
-          var extensionReport = DirRX.ExpenseReports.ExpenseReports.Create();
-          extensionReport.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
+          var expenseReport = DirRX.ExpenseReports.ExpenseReports.Create();
+          expenseReport.DocumentKind = DocumentKinds.GetAll().Where(x => x.Name == docStr.DocumentKind).FirstOrDefault();
           var author = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.AuthorExtId).FirstOrDefault();
-          extensionReport.Author = author;
-          extensionReport.Department = author.Department;
-          extensionReport.DocumentDate = Calendar.Now;
-          extensionReport.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
-          extensionReport.BusinessUnit = extensionReport.Assignee.Department.BusinessUnit;//; BusinessUnits.GetAll().Where(x => x.Id == extensionReport.Assignee.Department.BusinessUnit.Id).FirstOrDefault();
+          expenseReport.Author = author;
+          expenseReport.Department = author.Department;
+          expenseReport.DocumentDate = Calendar.Now;
+          expenseReport.Assignee = Employees.GetAll().Where(x => x.ExtIdhprom == docStr.EmployeeExtId).FirstOrDefault();
+          expenseReport.BusinessUnit = expenseReport.Assignee.Department.BusinessUnit;//; BusinessUnits.GetAll().Where(x => x.Id == expenseReport.Assignee.Department.BusinessUnit.Id).FirstOrDefault();
           var date = Convert.ToDateTime(docStr.DocumentDate);//Calendar.TryParseDateTime(docStr.DocumentDate, out DateTime date);
-          extensionReport.Subject = "ИД " + extensionReport.Id + " , " + extensionReport.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
-            date.ToString("dd.MM.yyyy") + " на сотрудника - " + extensionReport.Assignee.DisplayValue;
-          extensionReport.DisplayValue = extensionReport.Subject;
-          extensionReport.PreparedBy = author;
+          expenseReport.Subject = "ИД " + expenseReport.Id + " , " + expenseReport.DocumentKind.Name + " № \"" + docStr.DocumentNumber + "\" от " +
+            date.ToString("dd.MM.yyyy") + " на сотрудника - " + expenseReport.Assignee.DisplayValue;
+          expenseReport.DisplayValue = expenseReport.Subject;
+          expenseReport.PreparedBy = author;
           
-          var espense = extensionReport.Expenses.AddNew();
+          var espense = expenseReport.Expenses.AddNew();
           espense.ExpenseDescription = "Командировка/Служебная поездка";
           espense.ExpenseDate = date;
-          extensionReport.DocsCount = 0;
-          extensionReport.Employee = extensionReport.Assignee;
-          extensionReport.GettedMoney = 0;
-          extensionReport.PagesCount = 0;
-          extensionReport.Purpose = "Командировка/Служебная поездка";
-          extensionReport.RemainMoney = 0;
+          expenseReport.DocsCount = 0;
+          expenseReport.Employee = expenseReport.Assignee;
+          expenseReport.GettedMoney = 0;
+          expenseReport.PagesCount = 0;
+          expenseReport.Purpose = "Командировка/Служебная поездка";
+          expenseReport.RemainMoney = 0;
           
           using (MemoryStream stream = new MemoryStream())
           {
             var app = Sungero.Content.AssociatedApplications.GetAll().Where(x => x.Extension == docStr.DocExt).FirstOrDefault();
             byte[] data = Convert.FromBase64String(docStr.LastVersionBody);
             stream.Write(data, 0, data.Length);
-            extensionReport.CreateVersion();
-            extensionReport.LastVersion.AssociatedApplication = app;
-            extensionReport.LastVersion.Body.Write(stream);
+            expenseReport.CreateVersion();
+            expenseReport.LastVersion.AssociatedApplication = app;
+            expenseReport.LastVersion.Body.Write(stream);
           }
-          extensionReport.Save();
-          docStr.Id = extensionReport.Id;
+          expenseReport.Save();
+          docStr.Id = expenseReport.Id;
           
           var leadingDoc = Sungero.Docflow.OfficialDocuments.GetAll().Where(x => Equals(x.Id.ToString(), docStr.LeadingDocumentId)).FirstOrDefault();
           if (leadingDoc == null)
           {
-            message = string.Format("Ведущий документ ИД {0} для приказа {1} ИД {2} не найден", docStr.LeadingDocumentId, docStr.DocumentKind, extensionReport.Id);
+            message = string.Format("Ведущий документ ИД {0} для приказа {1} ИД {2} не найден", docStr.LeadingDocumentId, docStr.DocumentKind, expenseReport.Id);
             Logger.Debug($" >>> SOFTLINE >>> {message}");
             SendNotify(author.Email, message);
           }
           else
           {
-            leadingDoc.Relations.Add("Basis", extensionReport);
+            leadingDoc.Relations.Add("Basis", expenseReport);
             leadingDoc.Save();
           }
         }
@@ -1977,7 +1977,7 @@ namespace sline.Integration.Server
       return docStr;
     }
     
-    public string CheckExtensionReport(Structures.Module.IExtensionReportStr inputData)
+    public string CheckExpenseReport(Structures.Module.IExpenseReportStr inputData)
     {
       string message = string.Empty;
       try
