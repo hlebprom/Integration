@@ -138,6 +138,19 @@
       "WebApiRequestType": "Get"
     },
     {
+      "Name": "GetTaskTexts",
+      "Parameters": [
+        {
+          "Name": "idTask",
+          "ParameterType": "global::System.Int32",
+          "ParameterTypeFullName": "System.Int32"
+        }
+      ],
+      "ReturnType": "global::System.String",
+      "ReturnTypeFullName": "System.String",
+      "WebApiRequestType": "Get"
+    },
+    {
       "Name": "HPContract",
       "Parameters": [
         {
@@ -1519,7 +1532,7 @@
   "SharedAssemblyName": "sline.Integration.Shared",
   "SharedNamespace": "sline.Integration.Shared",
   "SpecialFolders": [],
-  "Version": "0.0.1.18",
+  "Version": "0.0.1.21",
   "Widgets": [],
   "Versions": [
     {

@@ -68,12 +68,7 @@ namespace sline.Integration.Server
     public IEmployee InsertEmployee(Structures.Module.IEmployeeStr inputData)
     {
       try
-      {
-        var entity = Employees.Create();
-        var extId = inputData.ExtId;
-        entity.ExtIdhprom = extId;
-        entity.PersonExtIdhprom = inputData.Person;
-        
+      {        
         var person = People.GetAll().FirstOrDefault(x => x.ExtIdhprom == inputData.Person) ?? People.Create();
         if (inputData.LastName != null)
           person.LastName = inputData.LastName;
@@ -100,18 +95,26 @@ namespace sline.Integration.Server
         }
         if (inputData.Status == "Active")
         {
-          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
+          //entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
           person.Status = Sungero.CoreEntities.DatabookEntry.Status.Active;
         }
         else if (inputData.Status == "Closed")
         {
-          entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
-          entity.Login = null;
+          //entity.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
+          //entity.Login = null;
           person.Status = Sungero.CoreEntities.DatabookEntry.Status.Closed;
         }
         person.ExtIdhprom = inputData.Person;
         person.Save();
+        
+        var entity = Employees.Create();
+        var extId = inputData.ExtId;
+        entity.ExtIdhprom = extId;
+        entity.PersonExtIdhprom = inputData.Person;
+        
+        
         entity.Person = person;
+        entity.Status = person.Status;
         
         if (inputData.Login != null)
           entity.Login = Sungero.CoreEntities.Logins.GetAll().Where(l => l.LoginName == inputData.Login).FirstOrDefault();
@@ -1235,6 +1238,18 @@ namespace sline.Integration.Server
       }
       return result;
     }
+    
+    [Public(WebApiRequestType = RequestType.Get)]
+    public string GetTaskTexts(int idTask)
+    {
+      string text = string.Empty;
+      var assignments = Sungero.Workflow.Assignments.GetAll().Where(x => x.MainTask.Id == idTask).ToList();
+      foreach (var assig in assignments)
+      {
+        text += assig.ActiveText + "\n";
+      }
+      return text;
+    }    
     #endregion
     
     #region Создание данных
